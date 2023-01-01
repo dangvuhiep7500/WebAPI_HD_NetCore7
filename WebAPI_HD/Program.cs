@@ -27,7 +27,9 @@ var builder = WebApplication.CreateBuilder(args);
     builder.Services.AddScoped<IJwtAuthenticationManager, JwtAuthenticationManager>();
     builder.Services.AddScoped<IUserService, UserService>();
     builder.Services.AddMvcCore().AddApiExplorer();
+    builder.Services.AddAuthorization();
     builder.Services.AddSingleton<JwtAuthenticationManager>();
+    builder.Services.AddCors();
     var jwtSection = builder.Configuration.GetSection("JWTSettings");
     var appSettings = jwtSection.Get<JWTSettings>();
     var key = Encoding.ASCII.GetBytes(appSettings.SecretKey);
@@ -53,6 +55,7 @@ var builder = WebApplication.CreateBuilder(args);
             ClockSkew = TimeSpan.Zero
         };
     });
+
 }
 
 
@@ -68,6 +71,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseCors(x => x
+       .AllowAnyOrigin()
+       .AllowAnyMethod()
+       .AllowAnyHeader());
+
 app.UseRouting();
 app.UseHttpsRedirection();
 app.UseAuthentication();

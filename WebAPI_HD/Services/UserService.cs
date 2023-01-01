@@ -9,7 +9,7 @@ namespace WebAPI_HD.Services
 {
     public interface IUserService
     {
-        LoginResponse Login(LoginModel model);
+        LoginResponse Login([FromBody] LoginModel model);
         IEnumerable<User> GetAll();
         User GetById(int id);
         void Register(RegisterRequest model);
@@ -31,20 +31,18 @@ namespace WebAPI_HD.Services
             _jwtAuth = jwtAuth;
             _mapper = mapper;
         }
-        public LoginResponse Login( LoginModel? model)
+        public LoginResponse Login([FromBody] LoginModel model)
         {
-            var user = _context.Users.SingleOrDefault(x => x.Username == model.Username);
+            var user = _context.Users.FirstOrDefault(x => x.Username == model.Username);
 
-
-            if (user == null || !BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
+            if ((user == null) || !BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
             {
                 throw new AppException("Username or password is incorrect");
             }
-          
-            //sign your token here here..
             var response = _mapper.Map<LoginResponse>(user);
             response.Token = _jwtAuth.GenerateAccessToken(user);
             return response;
+            //sign your token here here..
         }
         public IEnumerable<User> GetAll()
         {
@@ -102,7 +100,11 @@ namespace WebAPI_HD.Services
         private User getUser(int id)
         {
             var user = _context.Users.Find(id);
-            if (user == null) throw new KeyNotFoundException("User not found");
+            if (user == null)
+            {
+                throw new KeyNotFoundException("User not found");
+            } 
+                
             return user;
         }
 

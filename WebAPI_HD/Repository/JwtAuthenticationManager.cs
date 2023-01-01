@@ -15,35 +15,32 @@ namespace WebAPI_HD.Repository
 {
     public interface IJwtAuthenticationManager
     {
-        public string GenerateAccessToken(User username);
+        public string GenerateAccessToken(User user);
         public int? ValidateToken(string token);
     }
     public class JwtAuthenticationManager : IJwtAuthenticationManager
     {
+        private readonly IConfiguration Configuration;
+
         private readonly JWTSettings _jwtsettings;
-        public JwtAuthenticationManager(IOptions<JWTSettings> jwtsettings)
+        public JwtAuthenticationManager(IOptions<JWTSettings> jwtsettings, IConfiguration configuration)
+
         {
             _jwtsettings = jwtsettings.Value;
+            Configuration = configuration;
         }
 
-        public string GenerateAccessToken(User username)
+        public string GenerateAccessToken(User user)
         {
-            JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
-            var tokenKey = Encoding.ASCII.GetBytes(_jwtsettings.SecretKey);
-            SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor()
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(Configuration["JWTSettings:SecretKey"]);
+            var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new Claim[]
-                {
-                    new Claim(ClaimTypes.Name, username.Username)
-                }),
-                // Duration of the Token
-                // Now the the Duration to 1 Hour
-                Expires = DateTime.UtcNow.AddDays(1),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(tokenKey),
-                SecurityAlgorithms.HmacSha256Signature) //setting sha256 algorithm
+                Subject = new ClaimsIdentity(new[] { new Claim("id", user.Id.ToString()) }),
+                Expires = DateTime.UtcNow.AddDays(7),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
-
             return tokenHandler.WriteToken(token);
         }
         public int? ValidateToken(string token)
@@ -52,7 +49,7 @@ namespace WebAPI_HD.Repository
                 return null;
 
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_jwtsettings.SecretKey);
+            var key = Encoding.ASCII.GetBytes(Configuration["JWTSettings:SecretKey"]);
             try
             {
                 tokenHandler.ValidateToken(token, new TokenValidationParameters

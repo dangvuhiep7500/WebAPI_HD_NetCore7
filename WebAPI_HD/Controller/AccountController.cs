@@ -17,32 +17,31 @@ using WebAPI_HD.Services;
 
 namespace WebAPI_HD.Controller
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class AccountController : ControllerBase
     {
         private IUserService _userService;
         private IMapper _mapper;
-        private readonly JWTSettings _appSettings;
+        private readonly JWTSettings _jwtsettings;
 
         public AccountController(
             IUserService userService,
             IMapper mapper,
-            IOptions<JWTSettings> appSettings)
+            IOptions<JWTSettings> jwtsettings)
         {
             _userService = userService;
             _mapper = mapper;
-            _appSettings = appSettings.Value;
+            _jwtsettings = jwtsettings.Value;
         }
-
         [AllowAnonymous]
-        [HttpPost("Login")]
-        public IActionResult LoginUser(LoginModel model)
+        [HttpPost("login")]
+        public IActionResult LoginUser([FromBody] LoginModel model)
         {
             var response = _userService.Login(model);
             return Ok(response);
         }
-
         [AllowAnonymous]
         [HttpPost("register")]
         public IActionResult Register(RegisterRequest model)
@@ -73,7 +72,7 @@ namespace WebAPI_HD.Controller
         }
 
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public  IActionResult Delete(int id)
         {
             _userService.Delete(id);
             return Ok(new { message = "User deleted successfully" });
