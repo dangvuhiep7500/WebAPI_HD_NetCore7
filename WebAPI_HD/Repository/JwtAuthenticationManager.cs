@@ -9,28 +9,24 @@ using WebAPI_HD.Model;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Security.Cryptography;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace WebAPI_HD.Repository
 {
     public interface IJwtAuthenticationManager
     {
-        public string GenerateAccessToken(string username);
-        public RefreshToken GenerateRefreshToken();
-        public bool ValidateRefreshToken(User user, string refreshToken);
-        public bool UserExists(int id);
-        public Task<User> GetUserFromAccessToken(string accessToken);
+        public string GenerateAccessToken(User username);
+        public int? ValidateToken(string token);
     }
     public class JwtAuthenticationManager : IJwtAuthenticationManager
     {
-        private readonly ApplicationDbContext _context;
         private readonly JWTSettings _jwtsettings;
-        public JwtAuthenticationManager(ApplicationDbContext context, IOptions<JWTSettings> jwtsettings)
+        public JwtAuthenticationManager(IOptions<JWTSettings> jwtsettings)
         {
-            _context = context;
             _jwtsettings = jwtsettings.Value;
         }
 
-        public string GenerateAccessToken(string username)
+        public string GenerateAccessToken(User username)
         {
             JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
             var tokenKey = Encoding.ASCII.GetBytes(_jwtsettings.SecretKey);
@@ -38,7 +34,7 @@ namespace WebAPI_HD.Repository
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-                    new Claim(ClaimTypes.Name, username)
+                    new Claim(ClaimTypes.Name, username.Username)
                 }),
                 // Duration of the Token
                 // Now the the Duration to 1 Hour
@@ -50,73 +46,37 @@ namespace WebAPI_HD.Repository
 
             return tokenHandler.WriteToken(token);
         }
-        public RefreshToken GenerateRefreshToken()
+        public int? ValidateToken(string token)
         {
-            RefreshToken refreshToken = new RefreshToken();
+            if (token == null)
+                return null;
 
-            var randomNumber = new byte[32];
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(randomNumber);
-                refreshToken.Token = Convert.ToBase64String(randomNumber);
-            }
-            refreshToken.ExpiryDate = DateTime.UtcNow.AddMonths(6);
-
-            return refreshToken;
-        }
-        public bool ValidateRefreshToken(User user, string refreshToken)
-        {
-
-            RefreshToken? refreshTokenUser = _context.RefreshTokens.Where(rt => rt.Token == refreshToken)
-                                                .OrderByDescending(rt => rt.ExpiryDate)
-                                                .FirstOrDefault();
-
-            if (refreshTokenUser != null && refreshTokenUser.UserId == user.UserId
-                && refreshTokenUser.ExpiryDate > DateTime.UtcNow)
-            {
-                return true;
-            }
-
-            return false;
-        }
-        public async Task<User> GetUserFromAccessToken(string accessToken)
-        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_jwtsettings.SecretKey);
             try
             {
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var key = Encoding.ASCII.GetBytes(_jwtsettings.SecretKey);
-
-                var tokenValidationParameters = new TokenValidationParameters
+                tokenHandler.ValidateToken(token, new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(key),
                     ValidateIssuer = false,
-                    ValidateAudience = false
-                };
+                    ValidateAudience = false,
+                    // set clockskew to zero so tokens expire exactly at token expiration time (instead of 5 minutes later)
+                    ClockSkew = TimeSpan.Zero
+                }, out SecurityToken validatedToken);
 
-                SecurityToken securityToken;
-                var principle = tokenHandler.ValidateToken(accessToken, tokenValidationParameters, out securityToken);
+                var jwtToken = (JwtSecurityToken)validatedToken;
+                var userId = int.Parse(jwtToken.Claims.First(x => x.Type == "id").Value);
 
-                JwtSecurityToken jwtSecurityToken = securityToken as JwtSecurityToken;
-
-                if (jwtSecurityToken != null && jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    var userName = principle.FindFirst(ClaimTypes.Name);
-
-                    return await _context.Users.Include(u => u.Role)
-                                        .Where(u => u.Username == Convert.ToString(userName)).FirstOrDefaultAsync();
-                }
+                // return user id from JWT token if validation successful
+                return userId;
             }
-            catch (Exception)
+            catch
             {
-                return new User();
+                // return null if validation fails
+                return null;
             }
+        }
 
-            return new User();
-        }
-        public bool UserExists(int id)
-        {
-            return _context.Users.Any(e => e.UserId == id);
-        }
     }
 }
