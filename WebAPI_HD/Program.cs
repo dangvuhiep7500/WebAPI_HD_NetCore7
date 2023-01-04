@@ -20,8 +20,10 @@ var builder = WebApplication.CreateBuilder(args);
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
-    builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                    options.UseSqlServer(builder.Configuration.GetConnectionString("ConnStr")));
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>options.UseSqlServer(builder.Configuration.GetConnectionString("ConnStr")));
+    builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
     builder.Services.AddAutoMapper(typeof(Program));
     builder.Services.Configure<ApplicationDbContext>(builder.Configuration.GetSection("JWTSettings"));
     builder.Services.AddScoped<IJwtAuthenticationManager, JwtAuthenticationManager>();
