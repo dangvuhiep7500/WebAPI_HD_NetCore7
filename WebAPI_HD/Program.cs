@@ -9,7 +9,6 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using WebAPI_HD.Model;
 using WebAPI_HD.Repository;
-using WebAPI_HD.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 {
@@ -27,7 +26,7 @@ var builder = WebApplication.CreateBuilder(args);
     builder.Services.AddAutoMapper(typeof(Program));
     builder.Services.Configure<ApplicationDbContext>(builder.Configuration.GetSection("JWTSettings"));
     builder.Services.AddScoped<IJwtAuthenticationManager, JwtAuthenticationManager>();
-    builder.Services.AddScoped<IUserService, UserService>();
+  /*  builder.Services.AddScoped<IUserService, UserService>();*/
     builder.Services.AddMvcCore().AddApiExplorer();
     builder.Services.AddAuthorization();
     builder.Services.AddSingleton<JwtAuthenticationManager>();
@@ -82,7 +81,7 @@ app.UseRouting();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseMiddleware<JwtMiddleware>();
+
 app.MapControllers();
 
 app.Run();

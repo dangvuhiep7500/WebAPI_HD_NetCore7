@@ -1,5 +1,4 @@
-﻿using WebAPI_HD.Services;
-
+﻿
 namespace WebAPI_HD.Repository
 {
     public class JwtMiddleware
@@ -11,14 +10,13 @@ namespace WebAPI_HD.Repository
             _next = next;
         }
 
-        public async Task Invoke(HttpContext context, IUserService userService, JwtAuthenticationManager jwtUtils)
+        public async Task Invoke(HttpContext context, JwtAuthenticationManager jwtUtils)
         {
             var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
             var userId = jwtUtils.ValidateToken(token);
             if (userId != null)
             {
                 // attach user to context on successful jwt validation
-                context.Items["User"] = userService.GetById(userId.Value);
             }
 
             await _next(context);

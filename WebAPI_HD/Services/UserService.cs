@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+﻿/*using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -47,22 +47,24 @@ namespace WebAPI_HD.Services
             {
                 throw new AppException("Username or password is incorrect");
             }
-            var userRoles = await _userManager.GetRolesAsync(user);
-            var authClaims = new List<Claim>
+            else
+            {
+                var userRoles = await _userManager.GetRolesAsync(user);
+                var authClaims = new List<Claim>
                 {
                     new Claim(ClaimTypes.Name, user.UserName),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 };
-        /*    var token = _jwtAuth.GenerateAccessToken(authClaims);
 
-          return Ok(new
-            {
-                token = new JwtSecurityTokenHandler().WriteToken(token),
-                expiration = token.ValidTo
-            });*/
-          /*  var response = _mapper.Map<LoginResponse>(user);
-             response.Token = _jwtAuth.GenerateAccessToken(user);
-             return response;*/
+                foreach (var userRole in userRoles)
+                {
+                    authClaims.Add(new Claim(ClaimTypes.Role, userRole));
+                }
+                var token = _jwtAuth.GenerateAccessToken(authClaims);
+
+                return token;
+            }
+            
             //sign your token here here..
         }
         public IEnumerable<User> GetAll()
@@ -131,3 +133,4 @@ namespace WebAPI_HD.Services
 
     }
 }
+*/

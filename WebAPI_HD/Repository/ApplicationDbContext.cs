@@ -6,7 +6,7 @@ using WebAPI_HD.Model;
 
 namespace WebAPI_HD.Repository
 {
-    public class ApplicationDbContext : IdentityDbContext<User>
+    public class ApplicationDbContext : IdentityDbContext<IdentityUser>
     {
         /* protected readonly IConfiguration Configuration;
 
@@ -28,15 +28,16 @@ namespace WebAPI_HD.Repository
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-            builder.ApplyConfiguration(new ApplicationUserEntityConfiguration());
+            /*builder.ApplyConfiguration(new ApplicationUserEntityConfiguration());*/
         }
+
     }
-    public class ApplicationUserEntityConfiguration : IEntityTypeConfiguration<User>
-    {
-        public void Configure(EntityTypeBuilder<User> builder)
+    /*    public class ApplicationUserEntityConfiguration : IEntityTypeConfiguration<User>
         {
-            builder.Property(u => u.FirstName).HasMaxLength(255);
-            builder.Property(u => u.LastName).HasMaxLength(255);
-        }
-    }
+            public void Configure(EntityTypeBuilder<User> builder)
+            {
+                builder.Property(u => u.FirstName).HasMaxLength(255);
+                builder.Property(u => u.LastName).HasMaxLength(255);
+            }
+        }*/
 }

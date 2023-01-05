@@ -15,7 +15,7 @@ namespace WebAPI_HD.Repository
 {
     public interface IJwtAuthenticationManager
     {
-        public string GenerateAccessToken(User user);
+        public JwtSecurityToken GenerateAccessToken(List<Claim> authClaims);
         public int? ValidateToken(string token);
     }
     public class JwtAuthenticationManager : IJwtAuthenticationManager
@@ -30,18 +30,22 @@ namespace WebAPI_HD.Repository
             Configuration = configuration;
         }
 
-        public string GenerateAccessToken(User user)
+        public JwtSecurityToken GenerateAccessToken(List<Claim> authClaims)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(Configuration["JWTSettings:SecretKey"]);
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new[] { new Claim("id", user.Id.ToString()) }),
-                Expires = DateTime.UtcNow.AddDays(7),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
+            var authSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["JWTSettings:SecretKey"]));
+            var tokenDescriptor = new JwtSecurityToken
+            (
+                /*     Subject = new ClaimsIdentity(authClaims),
+                     Expires = DateTime.UtcNow.AddDays(7),
+                     SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)*/
+                expires: DateTime.Now.AddHours(3),
+                claims: authClaims,
+                signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
+            );
+           /* var token = tokenHandler.CreateToken(tokenDescriptor);*/
+            return tokenDescriptor;
         }
         public int? ValidateToken(string token)
         {
