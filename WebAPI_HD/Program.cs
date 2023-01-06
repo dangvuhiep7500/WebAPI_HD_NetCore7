@@ -23,6 +23,12 @@ var builder = WebApplication.CreateBuilder(args);
     builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
+    builder.Services.AddIdentityCore<IdentityUser>(opt =>
+    {
+        opt.Password.RequireDigit = false;
+        opt.Password.RequireNonAlphanumeric = false;
+        opt.Password.RequireUppercase = false;
+    });
     builder.Services.AddAutoMapper(typeof(Program));
     builder.Services.Configure<ApplicationDbContext>(builder.Configuration.GetSection("JWTSettings"));
     builder.Services.AddScoped<IJwtAuthenticationManager, JwtAuthenticationManager>();
@@ -30,6 +36,7 @@ var builder = WebApplication.CreateBuilder(args);
     builder.Services.AddMvcCore().AddApiExplorer();
     builder.Services.AddAuthorization();
     builder.Services.AddSingleton<JwtAuthenticationManager>();
+    builder.Services.AddSingleton<IPasswordHasher<IdentityUser>, PasswordHasher<IdentityUser>>();
     builder.Services.AddCors();
     var jwtSection = builder.Configuration.GetSection("JWTSettings");
     var appSettings = jwtSection.Get<JWTSettings>();

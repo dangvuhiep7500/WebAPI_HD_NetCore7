@@ -20,7 +20,7 @@ namespace WebAPI_HD.Repository
              // connect to sql server database
              options.UseSqlServer(Configuration.GetConnectionString("ConnStr"));
          }
-
+    
          public DbSet<User> Users { get; set; }*/
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {

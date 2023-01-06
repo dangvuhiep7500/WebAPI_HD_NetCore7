@@ -1,17 +1,11 @@
 ﻿using AutoMapper;
 using Azure;
-using Dapper;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+using BCrypt.Net;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
 using WebAPI_HD.Model;
 using WebAPI_HD.Repository;
 using Response = WebAPI_HD.Model.Response;
@@ -37,19 +31,19 @@ namespace WebAPI_HD.Controller
             _userManager = userManager;
             _roleManager = roleManager;
             _jwtsettings = jwtsettings.Value;
-            _jwtAuth= jwtAuth;
+            _jwtAuth = jwtAuth;
         }
         [HttpPost("login")]
-        public async Task<IActionResult> LoginUser([FromBody] LoginModel model)
+        public async Task<IActionResult> LoginUser(LoginModel model)
         {
-            var user = await _userManager.FindByNameAsync(model.Username);
-            if (user != null || BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
+            var user = await _userManager.FindByNameAsync(model.Username!);
+            if (user != null && await _userManager.CheckPasswordAsync(user, model.Password!))
             {
                 var userRoles = await _userManager.GetRolesAsync(user);
 
                 var authClaims = new List<Claim>
                 {
-                    new Claim(ClaimTypes.Name, user.UserName),
+                    new Claim(ClaimTypes.Name, user.UserName!),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 };
 
@@ -66,24 +60,23 @@ namespace WebAPI_HD.Controller
                     expiration = token.ValidTo
                 });
             }
-            
-            return Unauthorized();
-
+            throw new AppException("Username or password is incorrect");
         }
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterRequest model)
+        public async Task<IActionResult> Register(RegisterRequest model)
         {
-            var userExists = await _userManager.FindByNameAsync(model.Username);
+            var userExists = await _userManager.FindByNameAsync(model.Username!);
             if (userExists != null)
                 return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User already exists!" });
 
-            IdentityUser user = new()
+            IdentityUser user = new IdentityUser()
             {
                 Email = model.Email,
                 SecurityStamp = Guid.NewGuid().ToString(),
-                UserName = model.Username
+                UserName = model.Username,
+                PasswordHash = model.Password
             };
-            var result = await _userManager.CreateAsync(user, BCrypt.Net.BCrypt.HashPassword(model.Password));
+            var result = await _userManager.CreateAsync(user, model.Password!);
             Console.WriteLine(result);
             if (!result.Succeeded)
                 return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User creation failed! Please check user details and try again." });
