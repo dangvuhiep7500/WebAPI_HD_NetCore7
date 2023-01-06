@@ -1,38 +1,40 @@
 ﻿using AutoMapper;
 using Azure;
 using BCrypt.Net;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using WebAPI_HD.Helper;
 using WebAPI_HD.Model;
 using WebAPI_HD.Repository;
 using Response = WebAPI_HD.Model.Response;
 
 namespace WebAPI_HD.Controller
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class AccountController : ControllerBase
     {
         /*private IUserService _userService;*/
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private JwtAuthenticationManager _jwtAuth;
-        private readonly JWTSettings _jwtsettings;
 
         public AccountController(
-             UserManager<IdentityUser> userManager,
+             UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
-            JwtAuthenticationManager jwtAuth,
-            IOptions<JWTSettings> jwtsettings)
+            JwtAuthenticationManager jwtAuth)
         {
             _userManager = userManager;
             _roleManager = roleManager;
-            _jwtsettings = jwtsettings.Value;
             _jwtAuth = jwtAuth;
         }
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> LoginUser(LoginModel model)
         {
@@ -53,7 +55,6 @@ namespace WebAPI_HD.Controller
                 }
 
                 var token = _jwtAuth.GenerateAccessToken(authClaims);
-
                 return Ok(new
                 {
                     token = new JwtSecurityTokenHandler().WriteToken(token),
@@ -62,6 +63,7 @@ namespace WebAPI_HD.Controller
             }
             throw new AppException("Username or password is incorrect");
         }
+        [AllowAnonymous]
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterRequest model)
         {
@@ -69,12 +71,11 @@ namespace WebAPI_HD.Controller
             if (userExists != null)
                 return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User already exists!" });
 
-            IdentityUser user = new IdentityUser()
+            ApplicationUser user = new ApplicationUser()
             {
                 Email = model.Email,
                 SecurityStamp = Guid.NewGuid().ToString(),
                 UserName = model.Username,
-                PasswordHash = model.Password
             };
             var result = await _userManager.CreateAsync(user, model.Password!);
             Console.WriteLine(result);
@@ -82,6 +83,58 @@ namespace WebAPI_HD.Controller
                 return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User creation failed! Please check user details and try again." });
 
             return Ok(new Response { Status = "Success", Message = "User created successfully!" });
+        }
+        [HttpGet]
+        public IActionResult GetAll()
+        {
+            var users = _userManager.Users.ToList();
+            return Ok(users);
+        }
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+             if (user == null)
+            {
+                return NotFound();
+            }
+            return Ok(user);
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> Update(ApplicationUser model)
+        {
+            var user = await _userManager.FindByIdAsync(model.Id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            user.Email = model.Email;
+            user.LastName= model.LastName;
+            user.FirstName= model.FirstName;
+            user.PhoneNumber= model.PhoneNumber;
+            var result = await _userManager.UpdateAsync(user);
+            if (result.Succeeded)
+            {
+                return Ok(new { message = "User updated successfully" });
+            }
+            return NotFound();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            var result = await _userManager.DeleteAsync(user!);
+            if (result.Succeeded)
+            {
+                return Ok(new { message = "User deleted successfully" });
+            }
+            return NotFound();
         }
         /*
          [AllowAnonymous]

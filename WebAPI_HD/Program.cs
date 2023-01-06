@@ -20,23 +20,20 @@ var builder = WebApplication.CreateBuilder(args);
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
     builder.Services.AddDbContext<ApplicationDbContext>(options =>options.UseSqlServer(builder.Configuration.GetConnectionString("ConnStr")));
-    builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+    builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
-    builder.Services.AddIdentityCore<IdentityUser>(opt =>
+    builder.Services.AddIdentityCore<ApplicationUser>(opt =>
     {
         opt.Password.RequireDigit = false;
         opt.Password.RequireNonAlphanumeric = false;
         opt.Password.RequireUppercase = false;
     });
     builder.Services.AddAutoMapper(typeof(Program));
-    builder.Services.Configure<ApplicationDbContext>(builder.Configuration.GetSection("JWTSettings"));
     builder.Services.AddScoped<IJwtAuthenticationManager, JwtAuthenticationManager>();
-  /*  builder.Services.AddScoped<IUserService, UserService>();*/
     builder.Services.AddMvcCore().AddApiExplorer();
     builder.Services.AddAuthorization();
     builder.Services.AddSingleton<JwtAuthenticationManager>();
-    builder.Services.AddSingleton<IPasswordHasher<IdentityUser>, PasswordHasher<IdentityUser>>();
     builder.Services.AddCors();
     var jwtSection = builder.Configuration.GetSection("JWTSettings");
     var appSettings = jwtSection.Get<JWTSettings>();
@@ -48,7 +45,6 @@ var builder = WebApplication.CreateBuilder(args);
         options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
         options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
     })
-
     // Adding Jwt Bearer
     .AddJwtBearer(options =>
     {
@@ -63,10 +59,7 @@ var builder = WebApplication.CreateBuilder(args);
             ClockSkew = TimeSpan.Zero
         };
     });
-
 }
-
-
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {

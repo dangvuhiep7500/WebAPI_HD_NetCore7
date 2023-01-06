@@ -10,13 +10,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Security.Cryptography;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.AspNetCore.Identity;
 
 namespace WebAPI_HD.Repository
 {
     public interface IJwtAuthenticationManager
     {
         public JwtSecurityToken GenerateAccessToken(List<Claim> authClaims);
-        public int? ValidateToken(string token);
     }
     public class JwtAuthenticationManager : IJwtAuthenticationManager
     {
@@ -32,52 +32,28 @@ namespace WebAPI_HD.Repository
 
         public JwtSecurityToken GenerateAccessToken(List<Claim> authClaims)
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(Configuration["JWTSettings:SecretKey"]);
-            var authSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["JWTSettings:SecretKey"]));
+            var authSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["JWTSettings:SecretKey"]!));
             var tokenDescriptor = new JwtSecurityToken
             (
-                /*     Subject = new ClaimsIdentity(authClaims),
-                     Expires = DateTime.UtcNow.AddDays(7),
-                     SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)*/
                 expires: DateTime.Now.AddHours(3),
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
             );
-           /* var token = tokenHandler.CreateToken(tokenDescriptor);*/
             return tokenDescriptor;
         }
-        public int? ValidateToken(string token)
+        public string GenerateToken(IdentityUser user)
         {
-            if (token == null)
-                return null;
-
+            // generate token that is valid for 7 days
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(Configuration["JWTSettings:SecretKey"]);
-            try
+            var key = Encoding.ASCII.GetBytes(Configuration["JWTSettings:SecretKey"]!);
+            var tokenDescriptor = new SecurityTokenDescriptor
             {
-                tokenHandler.ValidateToken(token, new TokenValidationParameters
-                {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
-                    // set clockskew to zero so tokens expire exactly at token expiration time (instead of 5 minutes later)
-                    ClockSkew = TimeSpan.Zero
-                }, out SecurityToken validatedToken);
-
-                var jwtToken = (JwtSecurityToken)validatedToken;
-                var userId = int.Parse(jwtToken.Claims.First(x => x.Type == "id").Value);
-
-                // return user id from JWT token if validation successful
-                return userId;
-            }
-            catch
-            {
-                // return null if validation fails
-                return null;
-            }
+                Subject = new ClaimsIdentity(new[] { new Claim("UserName", user.UserName!)}),
+                Expires = DateTime.UtcNow.AddHours(3),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
         }
-
     }
 }
