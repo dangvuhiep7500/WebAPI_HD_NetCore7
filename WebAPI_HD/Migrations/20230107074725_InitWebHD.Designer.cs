@@ -12,7 +12,7 @@ using WebAPI_HD.Repository;
 namespace WebAPIHD.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230106103728_InitWebHD")]
+    [Migration("20230107074725_InitWebHD")]
     partial class InitWebHD
     {
         /// <inheritdoc />

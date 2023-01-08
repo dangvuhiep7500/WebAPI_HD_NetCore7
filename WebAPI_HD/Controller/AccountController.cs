@@ -1,14 +1,8 @@
-﻿using AutoMapper;
-using Azure;
-using BCrypt.Net;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using WebAPI_HD.Helper;
 using WebAPI_HD.Model;
 using WebAPI_HD.Repository;
 using Response = WebAPI_HD.Model.Response;
@@ -61,21 +55,23 @@ namespace WebAPI_HD.Controller
                     expiration = token.ValidTo
                 });
             }
-            throw new AppException("Username or password is incorrect");
+            return Ok(new Response { Status = "Error", Message = "Username or password is incorrect" });
         }
         [AllowAnonymous]
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterRequest model)
         {
-            var userExists = await _userManager.FindByNameAsync(model.Username!);
+            var userExists = await _userManager.FindByNameAsync(model.UserName!);
             if (userExists != null)
                 return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User already exists!" });
 
             ApplicationUser user = new ApplicationUser()
             {
+                FirstName= model.FirstName,
+                LastName = model.LastName,
                 Email = model.Email,
                 SecurityStamp = Guid.NewGuid().ToString(),
-                UserName = model.Username,
+                UserName = model.UserName,
             };
             var result = await _userManager.CreateAsync(user, model.Password!);
             Console.WriteLine(result);
@@ -84,6 +80,7 @@ namespace WebAPI_HD.Controller
 
             return Ok(new Response { Status = "Success", Message = "User created successfully!" });
         }
+        [Authorize(Roles = UserRoles.User)]
         [HttpGet]
         public IActionResult GetAll()
         {
@@ -100,7 +97,65 @@ namespace WebAPI_HD.Controller
             }
             return Ok(user);
         }
+        [AllowAnonymous]
+        [HttpPost("register-admin")]
+        public async Task<IActionResult> RegisterAdmin(RegisterRequest model)
+        {
+            var userExists = await _userManager.FindByNameAsync(model.UserName!);
+            if (userExists != null)
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User already exists!" });
 
+            ApplicationUser user = new ApplicationUser()
+            {
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                Email = model.Email,
+                SecurityStamp = Guid.NewGuid().ToString(),
+                UserName = model.UserName,
+            };
+            var result = await _userManager.CreateAsync(user, model.Password!);
+            if (!result.Succeeded)
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User creation failed! Please check user details and try again." });
+
+            if (!await _roleManager.RoleExistsAsync(UserRoles.Admin))
+                await _roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));
+            if (await _roleManager.RoleExistsAsync(UserRoles.Admin))
+            {
+                await _userManager.AddToRoleAsync(user, UserRoles.Admin);
+            }
+            return Ok(new Response { Status = "Success", Message = "User created successfully!" });
+        }
+        [AllowAnonymous]
+        [HttpPost("register-Superadmin")]
+        public async Task<IActionResult> RegisterSuperAdmin(RegisterRequest model)
+        {
+            var userExists = await _userManager.FindByNameAsync(model.UserName!);
+            var superadmin = await _roleManager.FindByNameAsync(UserRoles.SuperAdmin);
+            if (userExists != null)
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User already exists!" });
+            if (superadmin != null)
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "Role Super-Admin already exist" });
+
+            ApplicationUser user = new ApplicationUser()
+            {
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                Email = model.Email,
+                SecurityStamp = Guid.NewGuid().ToString(),
+                UserName = model.UserName,
+            };
+            var result = await _userManager.CreateAsync(user, model.Password!);
+            if (!result.Succeeded)
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User creation failed! Please check user details and try again." });
+
+            if (!await _roleManager.RoleExistsAsync(UserRoles.SuperAdmin))
+                await _roleManager.CreateAsync(new IdentityRole(UserRoles.SuperAdmin));
+            if (await _roleManager.RoleExistsAsync(UserRoles.SuperAdmin))
+            {
+                await _userManager.AddToRoleAsync(user, UserRoles.SuperAdmin);
+            }
+            return Ok(new Response { Status = "Success", Message = "User created successfully!" });
+        }
         [HttpPut]
         public async Task<IActionResult> Update(ApplicationUser model)
         {
