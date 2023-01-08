@@ -80,7 +80,7 @@ namespace WebAPI_HD.Controller
 
             return Ok(new Response { Status = "Success", Message = "User created successfully!" });
         }
-        [Authorize(Roles = UserRoles.User)]
+        [Authorize]
         [HttpGet]
         public IActionResult GetAll()
         {
@@ -150,9 +150,15 @@ namespace WebAPI_HD.Controller
 
             if (!await _roleManager.RoleExistsAsync(UserRoles.SuperAdmin))
                 await _roleManager.CreateAsync(new IdentityRole(UserRoles.SuperAdmin));
+            if (!await _roleManager.RoleExistsAsync(UserRoles.Admin))
+                await _roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));
             if (await _roleManager.RoleExistsAsync(UserRoles.SuperAdmin))
             {
                 await _userManager.AddToRoleAsync(user, UserRoles.SuperAdmin);
+            }
+            if (await _roleManager.RoleExistsAsync(UserRoles.Admin))
+            {
+                await _userManager.AddToRoleAsync(user, UserRoles.Admin);
             }
             return Ok(new Response { Status = "Success", Message = "User created successfully!" });
         }
