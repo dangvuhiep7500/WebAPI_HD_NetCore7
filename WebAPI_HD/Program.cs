@@ -36,6 +36,10 @@ var builder = WebApplication.CreateBuilder(args);
     builder.Services.AddAuthorization();
     builder.Services.AddSingleton<JwtAuthenticationManager>();
     builder.Services.AddCors();
+    builder.Services.AddMvc(options =>
+    {
+        options.SuppressAsyncSuffixInActionNames = false;
+    });
     var jwtSection = builder.Configuration.GetSection("JWTSettings");
     var appSettings = jwtSection.Get<JWTSettings>();
     var key = Encoding.ASCII.GetBytes(appSettings.SecretKey);

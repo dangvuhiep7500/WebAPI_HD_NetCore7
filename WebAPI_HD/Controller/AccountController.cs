@@ -80,7 +80,7 @@ namespace WebAPI_HD.Controller
 
             return Ok(new Response { Status = "Success", Message = "User created successfully!" });
         }
-        [Authorize]
+        [Authorize(Roles = UserRoles.SuperAdmin)]
         [HttpGet]
         public IActionResult GetAll()
         {
@@ -97,7 +97,7 @@ namespace WebAPI_HD.Controller
             }
             return Ok(user);
         }
-        [AllowAnonymous]
+        [Authorize(Roles = UserRoles.SuperAdmin)]
         [HttpPost("register-admin")]
         public async Task<IActionResult> RegisterAdmin(RegisterRequest model)
         {
@@ -162,7 +162,8 @@ namespace WebAPI_HD.Controller
             }
             return Ok(new Response { Status = "Success", Message = "User created successfully!" });
         }
-        [HttpPut]
+        [Authorize(Roles = UserRoles.Admin)]
+        [HttpPut("update")]
         public async Task<IActionResult> Update(ApplicationUser model)
         {
             var user = await _userManager.FindByIdAsync(model.Id);
@@ -181,7 +182,7 @@ namespace WebAPI_HD.Controller
             }
             return NotFound();
         }
-
+        [Authorize(Roles = UserRoles.SuperAdmin)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {
