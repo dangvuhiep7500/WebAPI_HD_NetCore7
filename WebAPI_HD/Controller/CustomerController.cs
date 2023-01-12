@@ -34,12 +34,12 @@ namespace WebAPI_HD.Controller
         }
         private bool CustomerExists(int id)
         {
-            return _context.Customers.Any(e => e.CustomerId == id);
+            return _context.Customers.Any(e => e.CustomerID == id);
         }
         [HttpPut("UpdateCustomer/{id}")]
         public async Task<IActionResult> PutCustomer(int id, Customer customers)
         {
-            if (id != customers.CustomerId)
+            if (id != customers.CustomerID)
             {
                 return BadRequest();
             }
@@ -69,7 +69,7 @@ namespace WebAPI_HD.Controller
         {
             _context.Customers.Add(cus);
             await _context.SaveChangesAsync();
-            return CreatedAtAction("GetCustomer", new { id = cus.CustomerId }, cus);
+            return CreatedAtAction("GetCustomer", new { id = cus.CustomerID }, cus);
         }
         [HttpDelete("DeleteCustomer/{id}")]
         public async Task<ActionResult<Customer>> DeleteCustomer(int id)

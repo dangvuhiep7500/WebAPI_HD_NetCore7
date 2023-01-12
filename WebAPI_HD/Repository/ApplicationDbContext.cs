@@ -13,14 +13,23 @@ namespace WebAPI_HD.Repository
         {
         }
         public virtual DbSet<Customer> Customers { get; set; }
+        public virtual DbSet<Bill> Bills { get; set; }
+        public virtual DbSet<BillDetails> BillDetails { get; set; }
+        public virtual DbSet<Product> Products { get; set; }
+        public virtual DbSet<Category> Categories { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            modelBuilder.Entity<Customer>(entity =>
+            modelBuilder.Entity<Bill>().ToTable("Bill");
+            modelBuilder.Entity<BillDetails>().ToTable("BillDetails");
+            modelBuilder.Entity<Product>().ToTable("Product");
+            modelBuilder.Entity<Category>().ToTable("Category");
+            modelBuilder.Entity<Customer>().ToTable("Customer");
+           /* modelBuilder.Entity<Customer>(entity =>
             {
                 entity.ToTable("Customer");
 
-                entity.Property(e => e.CustomerId).HasColumnName("customer_id");
+                entity.Property(e => e.CustomerID).HasColumnName("customer_id");
 
                 entity.Property(e => e.CustomerCode)
                     .HasColumnName("customercode")
@@ -49,7 +58,7 @@ namespace WebAPI_HD.Repository
                     .IsUnicode(false)
                     .IsFixedLength()
                     .HasDefaultValueSql("('UNKNOWN')");
-            });
+            });*/
         }
 
     }

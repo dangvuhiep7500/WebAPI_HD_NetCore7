@@ -12,8 +12,8 @@ using WebAPI_HD.Repository;
 namespace WebAPIHD.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230111041821_Customer")]
-    partial class Customer
+    [Migration("20230112102436_Management")]
+    partial class Management
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -229,52 +229,158 @@ namespace WebAPIHD.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("WebAPI_HD.Model.Bill", b =>
+                {
+                    b.Property<int>("BillID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BillID"));
+
+                    b.Property<string>("ApplicationUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("CustomerID")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<double>("TotalAmount")
+                        .HasColumnType("float");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("BillID");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.HasIndex("CustomerID");
+
+                    b.ToTable("Bill", (string)null);
+                });
+
+            modelBuilder.Entity("WebAPI_HD.Model.BillDetails", b =>
+                {
+                    b.Property<int>("BillDetailsID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BillDetailsID"));
+
+                    b.Property<double>("Amount")
+                        .HasColumnType("float");
+
+                    b.Property<int>("BillID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ProductID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Unit")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("UnitPrice")
+                        .HasColumnType("float");
+
+                    b.Property<double>("VAT")
+                        .HasColumnType("float");
+
+                    b.Property<int>("VATrate")
+                        .HasColumnType("int");
+
+                    b.HasKey("BillDetailsID");
+
+                    b.HasIndex("ProductID");
+
+                    b.ToTable("BillDetails", (string)null);
+                });
+
+            modelBuilder.Entity("WebAPI_HD.Model.Category", b =>
+                {
+                    b.Property<int>("CategoryID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CategoryID"));
+
+                    b.Property<string>("CategoryName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("CategoryID");
+
+                    b.ToTable("Category", (string)null);
+                });
+
             modelBuilder.Entity("WebAPI_HD.Model.Customer", b =>
                 {
-                    b.Property<int>("CustomerId")
+                    b.Property<int>("CustomerID")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("customer_id");
+                        .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CustomerId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CustomerID"));
 
                     b.Property<string>("Address")
-                        .HasMaxLength(40)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(40)")
-                        .HasColumnName("address");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CustomerCode")
-                        .HasMaxLength(100)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("customercode");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("EmailAddress")
-                        .HasMaxLength(100)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("email_address");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .HasMaxLength(100)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("name");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Phone")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(12)
-                        .IsUnicode(false)
-                        .HasColumnType("char(12)")
-                        .HasColumnName("phone")
-                        .HasDefaultValueSql("('UNKNOWN')")
-                        .IsFixedLength();
+                        .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("CustomerId");
+                    b.HasKey("CustomerID");
 
                     b.ToTable("Customer", (string)null);
+                });
+
+            modelBuilder.Entity("WebAPI_HD.Model.Product", b =>
+                {
+                    b.Property<int>("ProductID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductID"));
+
+                    b.Property<int>("CategoryID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Image")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("ImportUnitPrice")
+                        .HasColumnType("float");
+
+                    b.Property<string>("ProductName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<double>("UnitPrice")
+                        .HasColumnType("float");
+
+                    b.HasKey("ProductID");
+
+                    b.HasIndex("CategoryID");
+
+                    b.ToTable("Product", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -326,6 +432,65 @@ namespace WebAPIHD.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("WebAPI_HD.Model.Bill", b =>
+                {
+                    b.HasOne("WebAPI_HD.Model.ApplicationUser", "ApplicationUser")
+                        .WithMany("Bill")
+                        .HasForeignKey("ApplicationUserId");
+
+                    b.HasOne("WebAPI_HD.Model.Customer", "Customer")
+                        .WithMany("Bills")
+                        .HasForeignKey("CustomerID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApplicationUser");
+
+                    b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("WebAPI_HD.Model.BillDetails", b =>
+                {
+                    b.HasOne("WebAPI_HD.Model.Product", "Product")
+                        .WithMany("BillDetails")
+                        .HasForeignKey("ProductID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("WebAPI_HD.Model.Product", b =>
+                {
+                    b.HasOne("WebAPI_HD.Model.Category", "Category")
+                        .WithMany("Products")
+                        .HasForeignKey("CategoryID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("WebAPI_HD.Model.ApplicationUser", b =>
+                {
+                    b.Navigation("Bill");
+                });
+
+            modelBuilder.Entity("WebAPI_HD.Model.Category", b =>
+                {
+                    b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("WebAPI_HD.Model.Customer", b =>
+                {
+                    b.Navigation("Bills");
+                });
+
+            modelBuilder.Entity("WebAPI_HD.Model.Product", b =>
+                {
+                    b.Navigation("BillDetails");
                 });
 #pragma warning restore 612, 618
         }
