@@ -13,6 +13,7 @@
         public double Amount { get; set; }
         public string? Note { get; set; }
         public virtual Product? Product { get; set; }
+        public virtual Bill? Bill { get; set; }
 
     }
 }

@@ -1,7 +1,10 @@
-﻿namespace WebAPI_HD.Model
+﻿using System.Text.Json.Serialization;
+
+namespace WebAPI_HD.Model
 {
     public class Product
     {
+        [JsonIgnore]
         public int ProductID { get; set; }
         public string? ProductName { get; set; }
         public string? Description { get; set; }
@@ -10,8 +13,8 @@
         public double UnitPrice { get; set; }
         public double ImportUnitPrice { get; set; }
         public string? Image { get; set; }
-        public virtual Category? Category { get; set; }
-        public ICollection<BillDetails>? BillDetails { get; set; }
+        [JsonIgnore]
+        public virtual Category? Categories { get; set; }
 
     }
 }

@@ -59,7 +59,7 @@ namespace WebAPIHD.Migrations
                 {
                     table.PrimaryKey("PK_Product", x => x.ProductID);
                     table.ForeignKey(
-                        name: "FK_Product_Category_CategoryID",
+                        name: "FK__Product__Category_id",
                         column: x => x.CategoryID,
                         principalTable: "Category",
                         principalColumn: "CategoryID",
@@ -114,6 +114,12 @@ namespace WebAPIHD.Migrations
                 {
                     table.PrimaryKey("PK_BillDetails", x => x.BillDetailsID);
                     table.ForeignKey(
+                        name: "FK_BillDetails_Bill_BillID",
+                        column: x => x.BillID,
+                        principalTable: "Bill",
+                        principalColumn: "BillID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
                         name: "FK_BillDetails_Product_ProductID",
                         column: x => x.ProductID,
                         principalTable: "Product",
@@ -132,6 +138,11 @@ namespace WebAPIHD.Migrations
                 column: "CustomerID");
 
             migrationBuilder.CreateIndex(
+                name: "IX_BillDetails_BillID",
+                table: "BillDetails",
+                column: "BillID");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_BillDetails_ProductID",
                 table: "BillDetails",
                 column: "ProductID");
@@ -146,16 +157,16 @@ namespace WebAPIHD.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Bill");
-
-            migrationBuilder.DropTable(
                 name: "BillDetails");
 
             migrationBuilder.DropTable(
-                name: "Customer");
+                name: "Bill");
 
             migrationBuilder.DropTable(
                 name: "Product");
+
+            migrationBuilder.DropTable(
+                name: "Customer");
 
             migrationBuilder.DropTable(
                 name: "Category");

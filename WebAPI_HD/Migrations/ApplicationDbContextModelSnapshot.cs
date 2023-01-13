@@ -295,6 +295,8 @@ namespace WebAPIHD.Migrations
 
                     b.HasKey("BillDetailsID");
 
+                    b.HasIndex("BillID");
+
                     b.HasIndex("ProductID");
 
                     b.ToTable("BillDetails", (string)null);
@@ -450,29 +452,43 @@ namespace WebAPIHD.Migrations
 
             modelBuilder.Entity("WebAPI_HD.Model.BillDetails", b =>
                 {
-                    b.HasOne("WebAPI_HD.Model.Product", "Product")
+                    b.HasOne("WebAPI_HD.Model.Bill", "Bill")
                         .WithMany("BillDetails")
+                        .HasForeignKey("BillID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WebAPI_HD.Model.Product", "Product")
+                        .WithMany()
                         .HasForeignKey("ProductID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Bill");
 
                     b.Navigation("Product");
                 });
 
             modelBuilder.Entity("WebAPI_HD.Model.Product", b =>
                 {
-                    b.HasOne("WebAPI_HD.Model.Category", "Category")
+                    b.HasOne("WebAPI_HD.Model.Category", "Categories")
                         .WithMany("Products")
                         .HasForeignKey("CategoryID")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK__Product__Category_id");
 
-                    b.Navigation("Category");
+                    b.Navigation("Categories");
                 });
 
             modelBuilder.Entity("WebAPI_HD.Model.ApplicationUser", b =>
                 {
                     b.Navigation("Bill");
+                });
+
+            modelBuilder.Entity("WebAPI_HD.Model.Bill", b =>
+                {
+                    b.Navigation("BillDetails");
                 });
 
             modelBuilder.Entity("WebAPI_HD.Model.Category", b =>
@@ -483,11 +499,6 @@ namespace WebAPIHD.Migrations
             modelBuilder.Entity("WebAPI_HD.Model.Customer", b =>
                 {
                     b.Navigation("Bills");
-                });
-
-            modelBuilder.Entity("WebAPI_HD.Model.Product", b =>
-                {
-                    b.Navigation("BillDetails");
                 });
 #pragma warning restore 612, 618
         }
