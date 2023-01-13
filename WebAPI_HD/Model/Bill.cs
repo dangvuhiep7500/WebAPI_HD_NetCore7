@@ -6,7 +6,6 @@
         {
             BillDetails = new HashSet<BillDetails>();
         }
-
         public int BillID { get; set; }
         public int CustomerID { get; set; }
         public int UserId { get; set; }

@@ -8,7 +8,6 @@ namespace WebAPI_HD.Model
         {
             Products = new HashSet<Product>();
         }
-        [JsonIgnore]
         public int CategoryID { get; set; }
         public string? CategoryName { get; set; }
         

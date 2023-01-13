@@ -4,7 +4,6 @@ namespace WebAPI_HD.Model
 {
     public class Product
     {
-        [JsonIgnore]
         public int ProductID { get; set; }
         public string? ProductName { get; set; }
         public string? Description { get; set; }

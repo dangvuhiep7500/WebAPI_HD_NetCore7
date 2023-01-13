@@ -32,6 +32,13 @@ namespace WebAPI_HD.Controller
 
             return customer;
         }
+        [HttpPost("CreateCustomer")]
+        public async Task<IActionResult> PostCustomer(Customer cus)
+        {
+            _context.Customers.Add(cus);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction("GetCustomer", new { id = cus.CustomerID }, cus);
+        }
         private bool CustomerExists(int id)
         {
             return _context.Customers.Any(e => e.CustomerID == id);
@@ -63,13 +70,6 @@ namespace WebAPI_HD.Controller
             }
 
             return Ok(new { message = "Customer updated successfully" });
-        }
-        [HttpPost("CreateCustomer")]
-        public async Task<IActionResult> PostCustomer(Customer cus)
-        {
-            _context.Customers.Add(cus);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction("GetCustomer", new { id = cus.CustomerID }, cus);
         }
         [HttpDelete("DeleteCustomer/{id}")]
         public async Task<ActionResult<Customer>> DeleteCustomer(int id)
