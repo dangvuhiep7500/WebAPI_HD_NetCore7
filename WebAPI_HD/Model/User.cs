@@ -7,6 +7,7 @@ namespace WebAPI_HD.Model
     {
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
+        [JsonIgnore]
         public virtual ICollection<Bill>? Bill { get; set; }
     }
 }

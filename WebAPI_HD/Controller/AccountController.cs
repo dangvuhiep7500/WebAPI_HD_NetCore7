@@ -9,7 +9,7 @@ using Response = WebAPI_HD.Model.Response;
 
 namespace WebAPI_HD.Controller
 {
-    [Authorize]
+    /*[Authorize]*/
     [Route("api/[controller]")]
     [ApiController]
     public class AccountController : ControllerBase
@@ -58,7 +58,7 @@ namespace WebAPI_HD.Controller
             return Ok(new Response { Status = "Error", Message = "Username or password is incorrect" });
         }
         [AllowAnonymous]
-        [HttpPost("register")]
+        [HttpPost("register-user")]
         public async Task<IActionResult> Register(RegisterRequest model)
         {
             var userExists = await _userManager.FindByNameAsync(model.UserName!);
@@ -80,14 +80,14 @@ namespace WebAPI_HD.Controller
 
             return Ok(new Response { Status = "Success", Message = "User created successfully!" });
         }
-        [Authorize(Roles = UserRoles.SuperAdmin)]
-        [HttpGet]
+        /*[Authorize(Roles = UserRoles.SuperAdmin)]*/
+        [HttpGet("GetUsers")]
         public IActionResult GetAll()
         {
             var users = _userManager.Users.ToList();
             return Ok(users);
         }
-        [HttpGet("{id}")]
+        [HttpGet("GetUsers/{id}")]
         public async Task<IActionResult> GetById(string id)
         {
             var user = await _userManager.FindByIdAsync(id);
@@ -163,7 +163,7 @@ namespace WebAPI_HD.Controller
             return Ok(new Response { Status = "Success", Message = "User created successfully!" });
         }
         [Authorize(Roles = UserRoles.Admin)]
-        [HttpPut("update")]
+        [HttpPut("UpdateUser")]
         public async Task<IActionResult> Update(ApplicationUser model)
         {
             var user = await _userManager.FindByIdAsync(model.Id);
@@ -183,7 +183,7 @@ namespace WebAPI_HD.Controller
             return NotFound();
         }
         [Authorize(Roles = UserRoles.SuperAdmin)]
-        [HttpDelete("{id}")]
+        [HttpDelete("DeleteUser/{id}")]
         public async Task<IActionResult> Delete(string id)
         {
             var user = await _userManager.FindByIdAsync(id);

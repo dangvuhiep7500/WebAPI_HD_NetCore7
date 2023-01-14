@@ -7,7 +7,7 @@ using WebAPI_HD.Repository;
 
 namespace WebAPI_HD.Controller
 {
-    [Authorize(Roles = UserRoles.Admin)]
+ /*   [Authorize(Roles = UserRoles.Admin)]*/
     [Route("api/[controller]")]
     [ApiController]
     public class BillController : ControllerBase
@@ -22,6 +22,18 @@ namespace WebAPI_HD.Controller
         {
             return await _context.Bills.Include(x => x.Customer).Include(x => x.ApplicationUser).Include(x => x.BillDetails).ToListAsync();
         }
+        [HttpGet("GetBill/{id}")]
+        public async Task<ActionResult<Bill>> GetBill(string id)
+        {
+            var bills = await _context.Bills.Include(x => x.Customer).Include(x => x.ApplicationUser).Include(x => x.BillDetails).FirstOrDefaultAsync(x => x.BillID == id);
+
+            if (bills == null)
+            {
+                return NotFound();
+            }
+
+            return bills;
+        }
         [HttpPost("CreateBill")]
         public async Task<IActionResult> PostBill(Bill bills)
         {
@@ -29,12 +41,12 @@ namespace WebAPI_HD.Controller
             await _context.SaveChangesAsync();
             return CreatedAtAction("GetBill", new { id = bills.BillID }, bills);
         }
-        private bool BillExists(int id)
+        private bool BillExists(string id)
         {
             return _context.Bills.Any(e => e.BillID == id);
         }
         [HttpPut("UpdateBill/{id}")]
-        public async Task<IActionResult> PutBill(int id, Bill bills)
+        public async Task<IActionResult> PutBill(string id, Bill bills)
         {
             if (id != bills.BillID)
             {

@@ -7,7 +7,7 @@ using WebAPI_HD.Repository;
 
 namespace WebAPI_HD.Controller
 {
-    [Authorize(Roles = UserRoles.Admin)]
+   /* [Authorize(Roles = UserRoles.Admin)]*/
     [Route("api/[controller]")]
     [ApiController]
     public class ProductController : ControllerBase

@@ -6,10 +6,16 @@
         {
             BillDetails = new HashSet<BillDetails>();
         }
-        public int BillID { get; set; }
+        public string? BillID { get; set; }
         public int CustomerID { get; set; }
-        public int UserId { get; set; }
-        public DateTime Date { get; set; }
+        public string? ApplicationUserId { get; set; }
+        public DateTime Date
+        {
+            get
+            {
+                return DateTime.Now;
+            }
+        }
         public double TotalAmount { get; set; }
         public virtual Customer? Customer { get; set; }
         public virtual ApplicationUser? ApplicationUser { get; set; }

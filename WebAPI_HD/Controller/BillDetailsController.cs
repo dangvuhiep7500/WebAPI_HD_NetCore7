@@ -7,7 +7,7 @@ using WebAPI_HD.Repository;
 
 namespace WebAPI_HD.Controller
 {
-    [Authorize(Roles = UserRoles.Admin)]
+    /*[Authorize(Roles = UserRoles.Admin)]*/
     [Route("api/[controller]")]
     [ApiController]
     public class BillDetailsController : ControllerBase
@@ -21,6 +21,18 @@ namespace WebAPI_HD.Controller
         public async Task<ActionResult<IEnumerable<BillDetails>>> GetBillDetails()
         {
             return await _context.BillDetails.Include(x => x.Product).Include(x => x.Bill).ToListAsync();
+        }
+        [HttpGet("GetBillDetails/{id}")]
+        public async Task<ActionResult<BillDetails>> GetBillDetail(int id)
+        {
+            var billdetails = await _context.BillDetails.FindAsync(id);
+
+            if (billdetails == null)
+            {
+                return NotFound();
+            }
+
+            return billdetails;
         }
         [HttpPost("CreateBillDetails")]
         public async Task<IActionResult> PostBillDetails(BillDetails billdetail)

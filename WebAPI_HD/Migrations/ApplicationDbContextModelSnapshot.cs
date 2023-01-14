@@ -228,11 +228,8 @@ namespace WebAPIHD.Migrations
 
             modelBuilder.Entity("WebAPI_HD.Model.Bill", b =>
                 {
-                    b.Property<int>("BillID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BillID"));
+                    b.Property<string>("BillID")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ApplicationUserId")
                         .HasColumnType("nvarchar(450)");
@@ -240,14 +237,8 @@ namespace WebAPIHD.Migrations
                     b.Property<int>("CustomerID")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
-
                     b.Property<double>("TotalAmount")
                         .HasColumnType("float");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
 
                     b.HasKey("BillID");
 
@@ -266,11 +257,8 @@ namespace WebAPIHD.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BillDetailsID"));
 
-                    b.Property<double>("Amount")
-                        .HasColumnType("float");
-
-                    b.Property<int>("BillID")
-                        .HasColumnType("int");
+                    b.Property<string>("BillID")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Note")
                         .HasColumnType("nvarchar(max)");
@@ -285,9 +273,6 @@ namespace WebAPIHD.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<double>("UnitPrice")
-                        .HasColumnType("float");
-
-                    b.Property<double>("VAT")
                         .HasColumnType("float");
 
                     b.Property<int>("VATrate")
@@ -454,9 +439,7 @@ namespace WebAPIHD.Migrations
                 {
                     b.HasOne("WebAPI_HD.Model.Bill", "Bill")
                         .WithMany("BillDetails")
-                        .HasForeignKey("BillID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("BillID");
 
                     b.HasOne("WebAPI_HD.Model.Product", "Product")
                         .WithMany()
@@ -475,8 +458,7 @@ namespace WebAPIHD.Migrations
                         .WithMany("Products")
                         .HasForeignKey("CategoryID")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK__Product__Category_id");
+                        .IsRequired();
 
                     b.Navigation("Categories");
                 });

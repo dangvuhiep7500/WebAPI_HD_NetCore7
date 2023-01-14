@@ -1,12 +1,11 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace WebAPIHD.Migrations
 {
     /// <inheritdoc />
-    public partial class Management : Migration
+    public partial class Sales : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -59,7 +58,7 @@ namespace WebAPIHD.Migrations
                 {
                     table.PrimaryKey("PK_Product", x => x.ProductID);
                     table.ForeignKey(
-                        name: "FK__Product__Category_id",
+                        name: "FK_Product_Category_CategoryID",
                         column: x => x.CategoryID,
                         principalTable: "Category",
                         principalColumn: "CategoryID",
@@ -70,13 +69,10 @@ namespace WebAPIHD.Migrations
                 name: "Bill",
                 columns: table => new
                 {
-                    BillID = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    BillID = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     CustomerID = table.Column<int>(type: "int", nullable: false),
-                    UserId = table.Column<int>(type: "int", nullable: false),
-                    Date = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    TotalAmount = table.Column<double>(type: "float", nullable: false),
-                    ApplicationUserId = table.Column<string>(type: "nvarchar(450)", nullable: true)
+                    ApplicationUserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    TotalAmount = table.Column<double>(type: "float", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -100,14 +96,12 @@ namespace WebAPIHD.Migrations
                 {
                     BillDetailsID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    BillID = table.Column<int>(type: "int", nullable: false),
+                    BillID = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     ProductID = table.Column<int>(type: "int", nullable: false),
                     Unit = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Quantity = table.Column<int>(type: "int", nullable: false),
                     UnitPrice = table.Column<double>(type: "float", nullable: false),
                     VATrate = table.Column<int>(type: "int", nullable: false),
-                    VAT = table.Column<double>(type: "float", nullable: false),
-                    Amount = table.Column<double>(type: "float", nullable: false),
                     Note = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
@@ -117,8 +111,7 @@ namespace WebAPIHD.Migrations
                         name: "FK_BillDetails_Bill_BillID",
                         column: x => x.BillID,
                         principalTable: "Bill",
-                        principalColumn: "BillID",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "BillID");
                     table.ForeignKey(
                         name: "FK_BillDetails_Product_ProductID",
                         column: x => x.ProductID,
