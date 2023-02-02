@@ -12,7 +12,7 @@ using WebAPI_HD.Repository;
 namespace WebAPIHD.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230114102151_Sales")]
+    [Migration("20230202094148_Sales")]
     partial class Sales
     {
         /// <inheritdoc />
@@ -348,11 +348,11 @@ namespace WebAPIHD.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Image")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<double>("ImportUnitPrice")
                         .HasColumnType("float");
+
+                    b.Property<string>("Picture")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ProductName")
                         .HasColumnType("nvarchar(max)");

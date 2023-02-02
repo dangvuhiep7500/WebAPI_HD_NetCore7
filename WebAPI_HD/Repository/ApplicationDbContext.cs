@@ -17,6 +17,7 @@ namespace WebAPI_HD.Repository
         public virtual DbSet<BillDetails> BillDetails { get; set; }
         public virtual DbSet<Product> Products { get; set; }
         public virtual DbSet<Category> Categories { get; set; }
+        /*public virtual DbSet<ImgProduct> ImgProducts { get; set; }*/
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -25,40 +26,7 @@ namespace WebAPI_HD.Repository
             modelBuilder.Entity<Product>().ToTable("Product");
             modelBuilder.Entity<Category>().ToTable("Category");
             modelBuilder.Entity<Customer>().ToTable("Customer");
-           /* modelBuilder.Entity<Customer>(entity =>
-            {
-                entity.ToTable("Customer");
-
-                entity.Property(e => e.CustomerID).HasColumnName("customer_id");
-
-                entity.Property(e => e.CustomerCode)
-                    .HasColumnName("customercode")
-                    .HasMaxLength(100)
-                    .IsUnicode(false);
-
-                entity.Property(e => e.Address)
-               .HasColumnName("address")
-               .HasMaxLength(40)
-               .IsUnicode(false);
-
-                entity.Property(e => e.Name)
-                    .HasColumnName("name")
-                    .HasMaxLength(100)
-                    .IsUnicode(false);
-
-                entity.Property(e => e.EmailAddress)
-                    .HasColumnName("email_address")
-                    .HasMaxLength(100)
-                    .IsUnicode(false);
-
-                entity.Property(e => e.Phone)
-                    .IsRequired()
-                    .HasColumnName("phone")
-                    .HasMaxLength(12)
-                    .IsUnicode(false)
-                    .IsFixedLength()
-                    .HasDefaultValueSql("('UNKNOWN')");
-            });*/
+            /*modelBuilder.Entity<ImgProduct>().ToTable("ImgProduct");*/
         }
 
     }

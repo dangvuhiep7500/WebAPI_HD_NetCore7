@@ -45,7 +45,7 @@ var builder = WebApplication.CreateBuilder(args);
     });
     var jwtSection = builder.Configuration.GetSection("JWTSettings");
     var appSettings = jwtSection.Get<JWTSettings>();
-    var key = Encoding.ASCII.GetBytes(appSettings.SecretKey);
+    var key = Encoding.ASCII.GetBytes(appSettings!.SecretKey!);
     // Adding Authentication
     builder.Services.AddAuthentication(options =>
     {

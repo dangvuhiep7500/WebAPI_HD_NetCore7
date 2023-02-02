@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Data;
 using WebAPI_HD.Model;
 using WebAPI_HD.Repository;
+using static WebAPI_HD.Model.Product;
 
 namespace WebAPI_HD.Controller
 {
@@ -35,11 +36,40 @@ namespace WebAPI_HD.Controller
             return product;
         }
         [HttpPost("CreateProduct")]
-        public async Task<IActionResult> PostProduct(Product pro)
+        public async Task<IActionResult> PostProduct([FromForm] ProductViewModel model)
         {
-            _context.Products.Add(pro);
+            if (!ModelState.IsValid)
+                return BadRequest();
+
+            var product = new Product
+            {
+                ProductName = model.ProductName,
+                Description = model.Description,
+                CategoryID = model.CategoryID,
+                UnitPrice = model.UnitPrice,
+                ImportUnitPrice = model.ImportUnitPrice,
+            };
+            if(model.Image!.Length > 0)
+            {
+                foreach(var file in model.Image)
+                {
+                    var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", file.FileName);
+                    using (var stream = System.IO.File.Create(path))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+                    product.Picture = file.FileName;
+                }
+                
+            }
+            else
+            {
+                product.Picture = "";
+            }
+            _context.Products.Add(product);
             await _context.SaveChangesAsync();
-            return CreatedAtAction("GetProduct", new { id = pro.ProductID }, pro);
+            return CreatedAtAction("GetProduct", new { id = model.ProductName }, model);
+      
         }
         private bool ProductExists(int id)
         {
