@@ -51,8 +51,7 @@ namespace WebAPIHD.Migrations
                     CategoryID = table.Column<int>(type: "int", nullable: false),
                     Quantity = table.Column<int>(type: "int", nullable: false),
                     UnitPrice = table.Column<double>(type: "float", nullable: false),
-                    ImportUnitPrice = table.Column<double>(type: "float", nullable: false),
-                    Picture = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    ImportUnitPrice = table.Column<double>(type: "float", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -88,6 +87,25 @@ namespace WebAPIHD.Migrations
                         principalTable: "Customer",
                         principalColumn: "CustomerID",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ImageUri",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Uri = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ProductID = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ImageUri", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ImageUri_Product_ProductID",
+                        column: x => x.ProductID,
+                        principalTable: "Product",
+                        principalColumn: "ProductID");
                 });
 
             migrationBuilder.CreateTable(
@@ -141,6 +159,11 @@ namespace WebAPIHD.Migrations
                 column: "ProductID");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ImageUri_ProductID",
+                table: "ImageUri",
+                column: "ProductID");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Product_CategoryID",
                 table: "Product",
                 column: "CategoryID");
@@ -151,6 +174,9 @@ namespace WebAPIHD.Migrations
         {
             migrationBuilder.DropTable(
                 name: "BillDetails");
+
+            migrationBuilder.DropTable(
+                name: "ImageUri");
 
             migrationBuilder.DropTable(
                 name: "Bill");

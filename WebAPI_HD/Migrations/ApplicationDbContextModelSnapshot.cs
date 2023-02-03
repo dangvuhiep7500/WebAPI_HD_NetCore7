@@ -331,6 +331,28 @@ namespace WebAPIHD.Migrations
                     b.ToTable("Customer", (string)null);
                 });
 
+            modelBuilder.Entity("WebAPI_HD.Model.ImageUri", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("ProductID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Uri")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductID");
+
+                    b.ToTable("ImageUri");
+                });
+
             modelBuilder.Entity("WebAPI_HD.Model.Product", b =>
                 {
                     b.Property<int>("ProductID")
@@ -347,9 +369,6 @@ namespace WebAPIHD.Migrations
 
                     b.Property<double>("ImportUnitPrice")
                         .HasColumnType("float");
-
-                    b.Property<string>("Picture")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ProductName")
                         .HasColumnType("nvarchar(max)");
@@ -452,6 +471,13 @@ namespace WebAPIHD.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("WebAPI_HD.Model.ImageUri", b =>
+                {
+                    b.HasOne("WebAPI_HD.Model.Product", null)
+                        .WithMany("Picture")
+                        .HasForeignKey("ProductID");
+                });
+
             modelBuilder.Entity("WebAPI_HD.Model.Product", b =>
                 {
                     b.HasOne("WebAPI_HD.Model.Category", "Categories")
@@ -481,6 +507,11 @@ namespace WebAPIHD.Migrations
             modelBuilder.Entity("WebAPI_HD.Model.Customer", b =>
                 {
                     b.Navigation("Bills");
+                });
+
+            modelBuilder.Entity("WebAPI_HD.Model.Product", b =>
+                {
+                    b.Navigation("Picture");
                 });
 #pragma warning restore 612, 618
         }

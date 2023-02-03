@@ -33,11 +33,19 @@ namespace WebAPI_HD.Controller
             return customer;
         }
         [HttpPost("CreateCustomer")]
-        public async Task<IActionResult> PostCustomer(Customer cus)
+        public async Task<IActionResult> PostCustomer(CustomerViewModel cus)
         {
-            _context.Customers.Add(cus);
+            var customer = new Customer
+            {
+                CustomerCode = cus.CustomerCode,
+                Name = cus.Name,
+                Phone = cus.Phone,
+                Address = cus.Address,
+                EmailAddress = cus.EmailAddress,
+            };
+            _context.Customers.Add(customer);
             await _context.SaveChangesAsync();
-            return CreatedAtAction("GetCustomer", new { id = cus.CustomerID }, cus);
+            return CreatedAtAction("GetCustomer", new { id = customer.CustomerID }, cus);
         }
         private bool CustomerExists(int id)
         {
@@ -50,7 +58,6 @@ namespace WebAPI_HD.Controller
             {
                 return BadRequest();
             }
-
             _context.Entry(customers).State = EntityState.Modified;
 
             try

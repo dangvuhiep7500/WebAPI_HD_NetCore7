@@ -23,12 +23,28 @@ namespace WebAPI_HD.Controller
         {
             return await _context.Categories.Include(x => x.Products).ToListAsync();
         }
-        [HttpPost("CreateCategory")]
-        public async Task<IActionResult> PostCategory(Category cate)
+        [HttpGet("GetCategory/{id}")]
+        public async Task<ActionResult<Category>> GetCategory(int id)
         {
-            _context.Categories.Add(cate);
+            var category = await _context.Categories.Include(y => y.Products).FirstOrDefaultAsync(p => p.CategoryID == id);
+
+            if (category == null)
+            {
+                return NotFound();
+            }
+
+            return category;
+        }
+        [HttpPost("CreateCategory")]
+        public async Task<IActionResult> PostCategory(CategoryViewModel cate)
+        {
+            var category = new Category
+            {
+                CategoryName = cate.CategoryName,
+            };
+            _context.Categories.Add(category);
             await _context.SaveChangesAsync();
-            return CreatedAtAction("GetCategory", new { id = cate.CategoryID }, cate);
+            return CreatedAtAction("GetCategory", new { id = category.CategoryID }, cate);
         }
         private bool CategoryExists(int id)
         {

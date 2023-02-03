@@ -25,7 +25,7 @@ namespace WebAPI_HD.Controller
         [HttpGet("GetBillDetails/{id}")]
         public async Task<ActionResult<BillDetails>> GetBillDetail(int id)
         {
-            var billdetails = await _context.BillDetails.FindAsync(id);
+            var billdetails = await _context.BillDetails.Include(x => x.Product).Include(x => x.Bill).FirstOrDefaultAsync(p =>p.BillDetailsID == id);
 
             if (billdetails == null)
             {

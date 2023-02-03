@@ -21,12 +21,12 @@ namespace WebAPI_HD.Controller
         [HttpGet("GetProduct")]
         public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
         {
-            return await _context.Products.Include(x => x.Categories).ToListAsync();
+            return await _context.Products.Include(x => x.Categories).Include(y => y.Picture).ToListAsync();
         }
         [HttpGet("GetProduct/{id}")]
         public async Task<ActionResult<Product>> GetProduct(int id)
         {
-            var product = await _context.Products.FindAsync(id);
+            var product = await _context.Products.Include(y => y.Picture).FirstOrDefaultAsync(p => p.ProductID == id);
 
             if (product == null)
             {
@@ -48,6 +48,7 @@ namespace WebAPI_HD.Controller
                 CategoryID = model.CategoryID,
                 UnitPrice = model.UnitPrice,
                 ImportUnitPrice = model.ImportUnitPrice,
+                Picture = new List<ImageUri> { }
             };
             if(model.Image!.Length > 0)
             {
@@ -58,13 +59,13 @@ namespace WebAPI_HD.Controller
                     {
                         await file.CopyToAsync(stream);
                     }
-                    product.Picture = file.FileName;
+                    product.Picture.Add(new ImageUri { Uri = file.FileName});
                 }
                 
             }
             else
             {
-                product.Picture = "";
+                return NotFound();
             }
             _context.Products.Add(product);
             await _context.SaveChangesAsync();

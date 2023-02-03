@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace WebAPI_HD.Model
 {
@@ -11,9 +12,15 @@ namespace WebAPI_HD.Model
         public int Quantity { get; set; }
         public double UnitPrice { get; set; }
         public double ImportUnitPrice { get; set; }
-        public string? Picture { get; set; }
+        public List<ImageUri>? Picture { get; set; } = new List<ImageUri>();
         [JsonIgnore]
         public virtual Category? Categories { get; set; }
        
+    }
+    public class ImageUri
+    {
+        [Key]
+        public int Id { get; set; }
+        public string Uri { get; set; } = null!;
     }
 }
