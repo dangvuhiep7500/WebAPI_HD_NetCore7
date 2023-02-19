@@ -56,7 +56,7 @@ namespace WebAPI_HD.Controller
                     expiration = token.ValidTo
                 });
             }
-            return Ok(new Response { Status = "Error", Message = "Username or password is incorrect" });
+            return Unauthorized(new Response { Status = "Error", Message = "Username or password is incorrect" });
         }
         [AllowAnonymous]
         [HttpPost("register-user")]
