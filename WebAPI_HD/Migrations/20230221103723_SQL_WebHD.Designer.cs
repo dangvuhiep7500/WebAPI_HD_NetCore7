@@ -12,8 +12,8 @@ using WebAPI_HD.Repository;
 namespace WebAPIHD.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230203040208_Sales")]
-    partial class Sales
+    [Migration("20230221103723_SQL_WebHD")]
+    partial class SQLWebHD
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -205,6 +205,12 @@ namespace WebAPIHD.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
+
+                    b.Property<string>("RefreshToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("RefreshTokenExpiryTime")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");

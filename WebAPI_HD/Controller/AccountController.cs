@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
 using WebAPI_HD.Model;
 using WebAPI_HD.Repository;
 using Response = WebAPI_HD.Model.Response;
@@ -17,15 +19,18 @@ namespace WebAPI_HD.Controller
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private JwtAuthenticationManager _jwtAuth;
+        private readonly IConfiguration _configuration;
 
         public AccountController(
-             UserManager<ApplicationUser> userManager,
+            UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
-            JwtAuthenticationManager jwtAuth)
+            JwtAuthenticationManager jwtAuth,
+            IConfiguration configuration)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _jwtAuth = jwtAuth;
+            _configuration = configuration;
         }
         [AllowAnonymous]
         [HttpPost("login")]
@@ -50,13 +55,21 @@ namespace WebAPI_HD.Controller
                 }
 
                 var token = _jwtAuth.GenerateAccessToken(authClaims);
+                var refreshToken = _jwtAuth.GenerateRefreshToken();
+                _ = int.TryParse(_configuration["JWT:RefreshTokenValidityInDays"], out int refreshTokenValidityInDays);
+
+                user.RefreshToken = refreshToken;
+                user.RefreshTokenExpiryTime = DateTime.Now.AddDays(refreshTokenValidityInDays);
+
+                await _userManager.UpdateAsync(user);
                 return Ok(new
                 {
                     token = new JwtSecurityTokenHandler().WriteToken(token),
+                    RefreshToken = refreshToken,
                     expiration = token.ValidTo
                 });
             }
-            return Unauthorized(new Response { Status = "Error", Message = "Username or password is incorrect" });
+            return Unauthorized(new Response { Status = "Error", Message = "The login detail is incorrect" });
         }
         [AllowAnonymous]
         [HttpPost("register-user")]
@@ -81,7 +94,7 @@ namespace WebAPI_HD.Controller
 
             return Ok(new Response { Status = "Success", Message = "User created successfully!" });
         }
-        /*[Authorize(Roles = UserRoles.SuperAdmin)]*/
+        [Authorize(Roles = UserRoles.SuperAdmin)]
         [HttpGet("GetUsers")]
         public IActionResult GetAll()
         {
@@ -162,6 +175,76 @@ namespace WebAPI_HD.Controller
                 await _userManager.AddToRoleAsync(user, UserRoles.Admin);
             }
             return Ok(new Response { Status = "Success", Message = "User created successfully!" });
+        }
+        [HttpPost]
+        [Route("refresh-token")]
+        public async Task<IActionResult> RefreshToken(TokenModel tokenModel)
+        {
+            if (tokenModel is null)
+            {
+                return BadRequest("Invalid client request");
+            }
+
+            string? accessToken = tokenModel.AccessToken;
+            string? refreshToken = tokenModel.RefreshToken;
+
+            var principal = _jwtAuth.GetPrincipalFromExpiredToken(accessToken);
+            if (principal == null)
+            {
+                return BadRequest("Invalid access token or refresh token");
+            }
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+            string username = principal.Identity.Name;
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
+
+            var user = await _userManager.FindByNameAsync(username!);
+
+            if (user == null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
+            {
+                return BadRequest("Invalid access token or refresh token");
+            }
+
+            var newAccessToken = _jwtAuth.GenerateAccessToken(principal.Claims.ToList());
+            var newRefreshToken = _jwtAuth.GenerateRefreshToken();
+
+            user.RefreshToken = newRefreshToken;
+            await _userManager.UpdateAsync(user);
+
+            return new ObjectResult(new
+            {
+                accessToken = new JwtSecurityTokenHandler().WriteToken(newAccessToken),
+                refreshToken = newRefreshToken
+            });
+        }
+        //[Authorize]
+        [HttpPost]
+        [Route("revoke/{username}")]
+        public async Task<IActionResult> Revoke(string username)
+        {
+            var user = await _userManager.FindByNameAsync(username);
+            if (user == null) return BadRequest("Invalid user name");
+
+            user.RefreshToken = null;
+            await _userManager.UpdateAsync(user);
+
+            return NoContent();
+        }
+
+        //[Authorize(Roles = UserRoles.SuperAdmin)]
+        [HttpPost]
+        [Route("revoke-all")]
+        public async Task<IActionResult> RevokeAll()
+        {
+            var users = _userManager.Users.ToList();
+            foreach (var user in users)
+            {
+                user.RefreshToken = null;
+                await _userManager.UpdateAsync(user);
+            }
+
+            return NoContent();
         }
         [Authorize(Roles = UserRoles.Admin)]
         [HttpPut("UpdateUser")]
