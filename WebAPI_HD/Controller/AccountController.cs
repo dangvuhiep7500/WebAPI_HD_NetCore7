@@ -56,17 +56,17 @@ namespace WebAPI_HD.Controller
 
                 var token = _jwtAuth.GenerateAccessToken(authClaims);
                 var refreshToken = _jwtAuth.GenerateRefreshToken();
-                _ = int.TryParse(_configuration["JWT:RefreshTokenValidityInDays"], out int refreshTokenValidityInDays);
+                _ = int.TryParse(_configuration["JWTSettings:RefreshTokenValidityInDays"], out int refreshTokenValidityInDays);
 
                 user.RefreshToken = refreshToken;
                 user.RefreshTokenExpiryTime = DateTime.Now.AddDays(refreshTokenValidityInDays);
-
                 await _userManager.UpdateAsync(user);
                 return Ok(new
                 {
                     token = new JwtSecurityTokenHandler().WriteToken(token),
                     RefreshToken = refreshToken,
-                    expiration = token.ValidTo
+                    expirationToken = token.ValidTo,
+                    expirationRefreshToken = user.RefreshTokenExpiryTime,
                 });
             }
             return Unauthorized(new Response { Status = "Error", Message = "The login detail is incorrect" });
@@ -191,7 +191,7 @@ namespace WebAPI_HD.Controller
             var principal = _jwtAuth.GetPrincipalFromExpiredToken(accessToken);
             if (principal == null)
             {
-                return BadRequest("Invalid access token or refresh token");
+                return BadRequest("Invalid access token");
             }
 #pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
 #pragma warning disable CS8602 // Dereference of a possibly null reference.

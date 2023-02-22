@@ -33,11 +33,13 @@ namespace WebAPI_HD.Repository
         public JwtSecurityToken GenerateAccessToken(List<Claim> authClaims)
         {
             var authSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["JWTSettings:SecretKey"]!));
-             var tokenDescriptor = new JwtSecurityToken
+            _ = int.TryParse(Configuration["JWTSettings:TokenValidityInMinutes"], out int tokenValidityInMinutes);
+
+            var tokenDescriptor = new JwtSecurityToken
             (
                 //issuer: Configuration["JWT:ValidIssuer"],
                 //audience: Configuration["JWT:ValidAudience"],
-                expires: DateTime.Now.AddMinutes(5),
+                expires: DateTime.Now.AddMinutes(tokenValidityInMinutes),
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
             );
