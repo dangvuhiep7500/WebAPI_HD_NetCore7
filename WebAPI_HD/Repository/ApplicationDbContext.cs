@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Migrations;
 using System.Reflection.Emit;
 using WebAPI_HD.Model;
 
@@ -17,6 +18,7 @@ namespace WebAPI_HD.Repository
         public virtual DbSet<BillDetails> BillDetails { get; set; }
         public virtual DbSet<Product> Products { get; set; }
         public virtual DbSet<Category> Categories { get; set; }
+        public virtual DbSet<RefreshToken> RefreshToken { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -25,7 +27,8 @@ namespace WebAPI_HD.Repository
             modelBuilder.Entity<Product>().ToTable("Product");
             modelBuilder.Entity<Category>().ToTable("Category");
             modelBuilder.Entity<Customer>().ToTable("Customer");
+            modelBuilder.Entity<RefreshToken>().ToTable("RefreshToken");
         }
-
+       
     }
 }

@@ -8,7 +8,7 @@ using WebAPI_HD.Repository;
 
 namespace WebAPI_HD.Controller
 {
-   /* [Authorize(Roles = UserRoles.Admin)]*/
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class CategoryController : ControllerBase

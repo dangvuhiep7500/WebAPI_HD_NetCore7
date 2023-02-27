@@ -32,8 +32,6 @@ namespace WebAPIHD.Migrations
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     FirstName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    RefreshToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    RefreshTokenExpiryTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -82,6 +80,21 @@ namespace WebAPIHD.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Customer", x => x.CustomerID);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RefreshToken",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    refreshToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Expires = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RefreshToken", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -381,6 +394,9 @@ namespace WebAPIHD.Migrations
 
             migrationBuilder.DropTable(
                 name: "ImageUri");
+
+            migrationBuilder.DropTable(
+                name: "RefreshToken");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

@@ -39,10 +39,18 @@ namespace WebAPI_HD.Repository
             (
                 //issuer: Configuration["JWT:ValidIssuer"],
                 //audience: Configuration["JWT:ValidAudience"],
-                expires: DateTime.Now.AddMinutes(tokenValidityInMinutes),
+                expires: DateTime.Now.AddSeconds(5),
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
             );
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                SameSite = SameSiteMode.Strict,
+                Secure = true,
+                Expires = DateTime.Now.AddDays(7),
+                MaxAge = TimeSpan.FromDays(7)
+            };
             return tokenDescriptor;
         }
         public string GenerateRefreshToken()

@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -7,6 +9,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Net;
 using System.Text;
 using System.Text.Json.Serialization;
 using WebAPI_HD.Model;
@@ -18,7 +21,7 @@ var builder = WebApplication.CreateBuilder(args);
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
-    builder.Services.AddDbContext<ApplicationDbContext>(options =>options.UseSqlServer(builder.Configuration.GetConnectionString("ConnStr")));
+    builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("ConnStr")));
     builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
@@ -44,28 +47,63 @@ var builder = WebApplication.CreateBuilder(args);
     var appSettings = jwtSection.Get<JWTSettings>();
     var key = Encoding.ASCII.GetBytes(appSettings!.SecretKey!);
     // Adding Authentication
+
+    builder.Services.Configure<CookiePolicyOptions>(options =>
+    {
+        options.HttpOnly = HttpOnlyPolicy.Always;
+    });
+    //builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
+    //{
+    //    options.Cookie.HttpOnly = true;
+    //    options.Cookie.SameSite = SameSiteMode.Strict;
+    //    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    //    options.Events.OnRedirectToLogin = context =>
+    //    {
+    //        context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+    //        return Task.CompletedTask;
+    //    };
+    //})
     builder.Services.AddAuthentication(options =>
     {
         options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
         options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
         options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
     })
-    // Adding Jwt Bearer
-    .AddJwtBearer(options =>
+.AddCookie(options =>
     {
-        options.SaveToken = true;
-        options.RequireHttpsMetadata = false;
-        options.TokenValidationParameters = new TokenValidationParameters()
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Strict;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Events.OnRedirectToLogin = context =>
         {
-            ValidateIssuerSigningKey = true,
-            ValidateIssuer = false,
-            ValidateAudience = false,
-            IssuerSigningKey = new SymmetricSecurityKey(key),
-            ClockSkew = TimeSpan.Zero,
-            //ValidAudience = configuration["JWT:ValidAudience"],
-            //ValidIssuer = configuration["JWT:ValidIssuer"]
+            context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+            return Task.CompletedTask;
         };
-    });
+    })
+// Adding Jwt Bearer
+.AddJwtBearer(options =>
+{
+    options.SaveToken = true;
+    options.RequireHttpsMetadata = false;
+    options.TokenValidationParameters = new TokenValidationParameters()
+    {
+        ValidateIssuerSigningKey = true,
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ClockSkew = TimeSpan.Zero,
+        //ValidAudience = configuration["JWT:ValidAudience"],
+        //ValidIssuer = configuration["JWT:ValidIssuer"]
+    };
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            context.Token = context.Request.Cookies["accessToken"];
+            return Task.CompletedTask;
+        }
+    };
+});
     builder.Services.AddSwaggerGen(setup =>
     {
         // Include 'SecurityScheme' to use JWT Authentication
@@ -110,7 +148,8 @@ if (app.Environment.IsDevelopment())
 app.UseCors(x => x
        .AllowAnyOrigin()
        .AllowAnyMethod()
-       .AllowAnyHeader());
+       .AllowAnyHeader()
+       );
 
 app.UseRouting();
 app.UseHttpsRedirection();

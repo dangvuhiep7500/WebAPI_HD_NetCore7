@@ -12,7 +12,7 @@ using WebAPI_HD.Repository;
 namespace WebAPIHD.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230221103723_SQL_WebHD")]
+    [Migration("20230227031330_SQL_WebHD")]
     partial class SQLWebHD
     {
         /// <inheritdoc />
@@ -206,12 +206,6 @@ namespace WebAPIHD.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
-                    b.Property<string>("RefreshToken")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("RefreshTokenExpiryTime")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
@@ -393,6 +387,28 @@ namespace WebAPIHD.Migrations
                     b.HasIndex("CategoryID");
 
                     b.ToTable("Product", (string)null);
+                });
+
+            modelBuilder.Entity("WebAPI_HD.Model.RefreshToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Expires")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("refreshToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("RefreshToken", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
