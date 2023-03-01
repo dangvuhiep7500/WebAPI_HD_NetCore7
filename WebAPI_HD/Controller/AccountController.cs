@@ -81,9 +81,9 @@ namespace WebAPI_HD.Controller
                 }
                 await _context.SaveChangesAsync();
 
-                //user.RefreshToken = refreshToken;
-                //user.RefreshTokenExpiryTime = DateTime.Now.AddDays(refreshTokenValidityInDays);
-                //await _userManager.UpdateAsync(user);
+                user.RefreshToken = refreshToken;
+                user.RefreshTokenExpiryTime = DateTime.Now.AddDays(refreshTokenValidityInDays);
+                await _userManager.UpdateAsync(user);
 
                 //var cookieOptions = new CookieOptions
                 //{
@@ -100,8 +100,8 @@ namespace WebAPI_HD.Controller
                     token = Token,
                     RefreshToken = refreshToken,
                     expirationToken = token.ValidTo,
+                    expirationRefreshToken = user.RefreshTokenExpiryTime,
                     //expirationRefreshToken1 = existingToken.Expires,
-                    //expirationRefreshToken = user.RefreshTokenExpiryTime,
                 });
             }
             return Unauthorized(new Response { Status = "Error", Message = "The login detail is incorrect" });
@@ -136,7 +136,7 @@ namespace WebAPI_HD.Controller
             var users = _userManager.Users.ToList();
             return Ok(users);
         }
-        [Authorize]
+        //[Authorize]
         [HttpGet("GetUsers/{id}")]
         public async Task<IActionResult> GetById(string id)
         {
@@ -236,10 +236,10 @@ namespace WebAPI_HD.Controller
 #pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
             var user = await _userManager.FindByIdAsync(username!);
             var existingToken = await _context.RefreshToken.SingleOrDefaultAsync(t => t.UserId == user!.Id);
-            //if (user == null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
-            //{
-            //    return BadRequest("Invalid access token or refresh token");
-            //}
+            if (user == null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
+            {
+                return BadRequest("Invalid access token or refresh token");
+            }
             if (existingToken == null || existingToken.refreshToken != refreshToken || existingToken.Expires <= DateTime.Now)
             {
                 return BadRequest("Invalid access token or refresh token");
@@ -248,8 +248,8 @@ namespace WebAPI_HD.Controller
             var newAccessToken = _jwtAuth.GenerateAccessToken(principal.Claims.ToList());
             var newRefreshToken = _jwtAuth.GenerateRefreshToken();
 
-            //user.RefreshToken = newRefreshToken;
-            //await _userManager.UpdateAsync(user);
+            user.RefreshToken = newRefreshToken;
+            await _userManager.UpdateAsync(user);
             existingToken.refreshToken = newRefreshToken;
              _context.Update(existingToken);
             await _context.SaveChangesAsync();
@@ -290,16 +290,20 @@ namespace WebAPI_HD.Controller
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
 #pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
             var user = await _userManager.FindByIdAsync(username!);
+
             var existingToken = await _context.RefreshToken.SingleOrDefaultAsync(p => p.UserId == user!.Id);
 
             if (existingToken == null || existingToken.refreshToken == null || existingToken.Expires <= DateTime.Now)
             {
                 return NotFound();
             }
-
+            var newAccessToken = _jwtAuth.GenerateAccessToken(principal.Claims.ToList());
+            var newRefreshToken = _jwtAuth.GenerateRefreshToken();
             return Ok(new
             {
-                RefreshToken = existingToken.refreshToken
+                RefreshToken = existingToken.refreshToken,
+                accessToken = new JwtSecurityTokenHandler().WriteToken(newAccessToken),
+                refreshToken = newRefreshToken
             });
         }
         //[Authorize]
