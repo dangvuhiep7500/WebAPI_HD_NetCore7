@@ -61,26 +61,6 @@ namespace WebAPI_HD.Controller
                 var token = _jwtAuth.GenerateAccessToken(authClaims);
                 var refreshToken = _jwtAuth.GenerateRefreshToken();
                 _ = int.TryParse(_configuration["JWTSettings:RefreshTokenValidityInDays"], out int refreshTokenValidityInDays);
-                var existingToken = await _context.RefreshToken.FirstOrDefaultAsync(t => t.UserId == user.Id);
-                if (existingToken == null)
-                {
-                    var RefreshToken = new RefreshToken
-                    {
-                        refreshToken = refreshToken,
-                        UserId = user.Id,
-                        Expires = DateTime.Now.AddDays(refreshTokenValidityInDays)
-                    };
-                     _context.RefreshToken.Add(RefreshToken);
-                }
-                else
-                {
-                    existingToken.refreshToken = refreshToken;
-                    existingToken.Expires = DateTime.Now.AddDays(refreshTokenValidityInDays);
-                    existingToken.UserId = user.Id;
-                    _context.RefreshToken.Update(existingToken);
-                }
-                await _context.SaveChangesAsync();
-
                 user.RefreshToken = refreshToken;
                 user.RefreshTokenExpiryTime = DateTime.Now.AddDays(refreshTokenValidityInDays);
                 await _userManager.UpdateAsync(user);
@@ -100,8 +80,6 @@ namespace WebAPI_HD.Controller
                     token = Token,
                     RefreshToken = refreshToken,
                     expirationToken = token.ValidTo,
-                    expirationRefreshToken = user.RefreshTokenExpiryTime,
-                    //expirationRefreshToken1 = existingToken.Expires,
                 });
             }
             return Unauthorized(new Response { Status = "Error", Message = "The login detail is incorrect" });
@@ -147,7 +125,7 @@ namespace WebAPI_HD.Controller
             }
             return Ok(user);
         }
-        [Authorize(Roles = UserRoles.SuperAdmin)]
+        //[Authorize(Roles = UserRoles.SuperAdmin)]
         [HttpPost("register-admin")]
         public async Task<IActionResult> RegisterAdmin(RegisterRequest model)
         {
@@ -235,24 +213,15 @@ namespace WebAPI_HD.Controller
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
 #pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
             var user = await _userManager.FindByIdAsync(username!);
-            var existingToken = await _context.RefreshToken.SingleOrDefaultAsync(t => t.UserId == user!.Id);
             if (user == null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
             {
                 return BadRequest("Invalid access token or refresh token");
             }
-            if (existingToken == null || existingToken.refreshToken != refreshToken || existingToken.Expires <= DateTime.Now)
-            {
-                return BadRequest("Invalid access token or refresh token");
-            }
-
             var newAccessToken = _jwtAuth.GenerateAccessToken(principal.Claims.ToList());
             var newRefreshToken = _jwtAuth.GenerateRefreshToken();
 
             user.RefreshToken = newRefreshToken;
             await _userManager.UpdateAsync(user);
-            existingToken.refreshToken = newRefreshToken;
-             _context.Update(existingToken);
-            await _context.SaveChangesAsync();
             //HttpContext.Response.Cookies.Append("refreshToken", newRefreshToken,
             //    new CookieOptions
             //    {
@@ -270,68 +239,28 @@ namespace WebAPI_HD.Controller
         }
         //[Authorize]
         [HttpPost]
-        [Route("get-refresh-token")]
-        public async Task<IActionResult> GetRefreshToken(RefreshTokenModel refreshToken)
+        [Route("revoke/{username}")]
+        public async Task<IActionResult> Revoke(string username)
         {
-            if (refreshToken is null)
-            {
-                return BadRequest("Invalid client request");
-            }
-            string? accessToken = refreshToken.AccessToken;
-
-            var principal = _jwtAuth.GetPrincipalFromExpiredToken(accessToken);
-            if (principal == null)
-            {
-                return BadRequest("Invalid access token");
-            }
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
-            string username = principal.Identity.Name;
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
-            var user = await _userManager.FindByIdAsync(username!);
-
-            var existingToken = await _context.RefreshToken.SingleOrDefaultAsync(p => p.UserId == user!.Id);
-
-            if (existingToken == null || existingToken.refreshToken == null || existingToken.Expires <= DateTime.Now)
-            {
-                return NotFound();
-            }
-            var newAccessToken = _jwtAuth.GenerateAccessToken(principal.Claims.ToList());
-            var newRefreshToken = _jwtAuth.GenerateRefreshToken();
-            return Ok(new
-            {
-                RefreshToken = existingToken.refreshToken,
-                accessToken = new JwtSecurityTokenHandler().WriteToken(newAccessToken),
-                refreshToken = newRefreshToken
-            });
-        }
-        //[Authorize]
-        [HttpPost]
-        [Route("revoke/{userId}")]
-        public async Task<IActionResult> Revoke(string userId)
-        {
-            var user = await _context.RefreshToken.FirstOrDefaultAsync(t => t.UserId == userId);
+            var user = await _userManager.FindByNameAsync(username);
             if (user == null) return BadRequest("Invalid user name");
 
-            user.refreshToken = null;
-            _context.RefreshToken.Update(user);
-            await _context.SaveChangesAsync();
+            user.RefreshToken = null;
+            await _userManager.UpdateAsync(user);
 
             return NoContent();
-        }
 
+        }
         //[Authorize(Roles = UserRoles.SuperAdmin)]
         [HttpPost]
         [Route("revoke-all")]
         public async Task<IActionResult> RevokeAll()
         {
-            var users = _context.RefreshToken.ToList();
+            var users = _userManager.Users.ToList();
             foreach (var user in users)
             {
-                user.refreshToken = null;
-                _context.RefreshToken.Update(user);
-                await _context.SaveChangesAsync();
+                user.RefreshToken = null;
+                await _userManager.UpdateAsync(user);
             }
 
             return NoContent();
