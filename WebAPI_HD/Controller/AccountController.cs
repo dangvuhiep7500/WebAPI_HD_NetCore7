@@ -75,7 +75,7 @@ namespace WebAPI_HD.Controller
                     SameSite = SameSiteMode.None,
                     MaxAge = TimeSpan.FromDays(7)
                 };
-                HttpContext.Response.Cookies.Append("token", Token, cookieOptions);
+                HttpContext.Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
                 return Ok(new
                 {
                     token = Token,
@@ -191,6 +191,52 @@ namespace WebAPI_HD.Controller
             }
             return Ok(new Response { Status = "Success", Message = "User created successfully!" });
         }
+//        [HttpPost]
+//        [Route("refresh-token")]
+//        public async Task<IActionResult> RefreshToken(TokenModel tokenModel)
+//        {
+//            if (tokenModel is null)
+//            {
+//                return BadRequest("Invalid client request");
+//            }
+//            string? accessToken = tokenModel.AccessToken;
+//            string? refreshToken = tokenModel.RefreshToken;
+
+//            var principal = _jwtAuth.GetPrincipalFromExpiredToken(accessToken);
+//            if (principal == null)
+//            {
+//                return BadRequest("Invalid access token");
+//            }
+//#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
+//#pragma warning disable CS8602 // Dereference of a possibly null reference.
+//            string username = principal.Identity.Name;
+//#pragma warning restore CS8602 // Dereference of a possibly null reference.
+//#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
+//            var user = await _userManager.FindByIdAsync(username!);
+//            if (user == null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
+//            {
+//                return BadRequest("Invalid access token or refresh token");
+//            }
+//            var newAccessToken = _jwtAuth.GenerateAccessToken(principal.Claims.ToList());
+//            var newRefreshToken = _jwtAuth.GenerateRefreshToken();
+
+//            user.RefreshToken = newRefreshToken;
+//            await _userManager.UpdateAsync(user);
+//            //HttpContext.Response.Cookies.Append("refreshToken", newRefreshToken,
+//            //    new CookieOptions
+//            //    {
+//            //        Expires = DateTime.Now.AddDays(7),
+//            //        HttpOnly = true,
+//            //        Secure = true,
+//            //        IsEssential = true,
+//            //        SameSite = SameSiteMode.None
+//            //    });
+//            return new ObjectResult(new
+//            {
+//                accessToken = new JwtSecurityTokenHandler().WriteToken(newAccessToken),
+//                refreshToken = newRefreshToken,
+//            });
+//        } 
         [HttpPost]
         [Route("refresh-token")]
         public async Task<IActionResult> RefreshToken(TokenModel tokenModel)
@@ -199,9 +245,8 @@ namespace WebAPI_HD.Controller
             {
                 return BadRequest("Invalid client request");
             }
-
             string? accessToken = tokenModel.AccessToken;
-            string? refreshToken = tokenModel.RefreshToken;
+            var refreshToken = Request.Cookies["refreshToken"];
 
             var principal = _jwtAuth.GetPrincipalFromExpiredToken(accessToken);
             if (principal == null)
@@ -214,24 +259,28 @@ namespace WebAPI_HD.Controller
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
 #pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
             var user = await _userManager.FindByIdAsync(username!);
-            if (user == null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
+            if (!user!.RefreshToken!.Equals(refreshToken) || user == null)
             {
-                return BadRequest("Invalid access token or refresh token");
+                return Unauthorized("Invaild RefreshToken");
+            }else if (user.RefreshTokenExpiryTime <= DateTime.Now)
+            {
+                return Unauthorized("Token expired");
             }
             var newAccessToken = _jwtAuth.GenerateAccessToken(principal.Claims.ToList());
             var newRefreshToken = _jwtAuth.GenerateRefreshToken();
 
             user.RefreshToken = newRefreshToken;
             await _userManager.UpdateAsync(user);
-            //HttpContext.Response.Cookies.Append("refreshToken", newRefreshToken,
-            //    new CookieOptions
-            //    {
-            //        Expires = DateTime.Now.AddDays(7),
-            //        HttpOnly = true,
-            //        Secure = true,
-            //        IsEssential = true,
-            //        SameSite = SameSiteMode.None
-            //    });
+            var cookieOptions = new CookieOptions
+            {
+                Expires = DateTime.Now.AddDays(7),
+                HttpOnly = true,
+                Secure = true,
+                IsEssential = true,
+                SameSite = SameSiteMode.None,
+                MaxAge = TimeSpan.FromDays(7)
+            };
+            HttpContext.Response.Cookies.Append("refreshToken", newRefreshToken, cookieOptions);
             return new ObjectResult(new
             {
                 accessToken = new JwtSecurityTokenHandler().WriteToken(newAccessToken),
