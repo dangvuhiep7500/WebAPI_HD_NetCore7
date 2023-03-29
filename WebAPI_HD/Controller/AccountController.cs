@@ -15,7 +15,7 @@ using Response = WebAPI_HD.Model.Response;
 namespace WebAPI_HD.Controller
 {
     /*[Authorize]*/
-    [Route("api/[controller]")]
+    [Route("auth")]
     [ApiController]
     public class AccountController : ControllerBase
     {
@@ -64,17 +64,18 @@ namespace WebAPI_HD.Controller
                 user.RefreshToken = refreshToken;
                 user.RefreshTokenExpiryTime = DateTime.Now.AddDays(refreshTokenValidityInDays);
                 await _userManager.UpdateAsync(user);
-
-                //var cookieOptions = new CookieOptions
-                //{
-                //    HttpOnly = true,
-                //    SameSite = SameSiteMode.Strict,
-                //    Secure = true,
-                //    Expires = DateTime.Now.AddDays(7),
-                //    MaxAge = TimeSpan.FromDays(7)
-                //};
-                //Response.Cookies.Append("accessToken", Token, cookieOptions);
                 var Token = new JwtSecurityTokenHandler().WriteToken(token);
+
+                var cookieOptions = new CookieOptions
+                {
+                    Expires = DateTime.Now.AddDays(7),
+                    HttpOnly = true,
+                    Secure = true,
+                    IsEssential= true,
+                    SameSite = SameSiteMode.None,
+                    MaxAge = TimeSpan.FromDays(7)
+                };
+                HttpContext.Response.Cookies.Append("token", Token, cookieOptions);
                 return Ok(new
                 {
                     token = Token,

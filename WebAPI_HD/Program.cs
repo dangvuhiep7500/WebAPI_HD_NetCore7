@@ -36,7 +36,16 @@ var builder = WebApplication.CreateBuilder(args);
     builder.Services.AddMvcCore().AddApiExplorer();
     builder.Services.AddAuthorization();
     builder.Services.AddSingleton<JwtAuthenticationManager>();
-    builder.Services.AddCors();
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("CorsPolicy",
+            builder => builder.AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .WithOrigins("http://localhost:3000")
+                .AllowCredentials()
+                );
+    });
     builder.Services.AddControllers().AddJsonOptions(x =>
                 x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
     builder.Services.AddMvc(options =>
@@ -52,17 +61,6 @@ var builder = WebApplication.CreateBuilder(args);
     {
         options.HttpOnly = HttpOnlyPolicy.Always;
     });
-    //builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
-    //{
-    //    options.Cookie.HttpOnly = true;
-    //    options.Cookie.SameSite = SameSiteMode.Strict;
-    //    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-    //    options.Events.OnRedirectToLogin = context =>
-    //    {
-    //        context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-    //        return Task.CompletedTask;
-    //    };
-    //})
     builder.Services.AddAuthentication(options =>
     {
         options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -71,14 +69,15 @@ var builder = WebApplication.CreateBuilder(args);
     })
 .AddCookie(options =>
     {
-        options.Cookie.HttpOnly = true;
-        options.Cookie.SameSite = SameSiteMode.Strict;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-        options.Events.OnRedirectToLogin = context =>
-        {
-            context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-            return Task.CompletedTask;
-        };
+        //options.Cookie.HttpOnly = true;
+        //options.Cookie.SameSite = SameSiteMode.Strict;
+        //options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        //options.Events.OnRedirectToLogin = context =>
+        //{
+        //    context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+        //    return Task.CompletedTask;
+        //};
+        options.Cookie.Name = "token";
     })
 // Adding Jwt Bearer
 .AddJwtBearer(options =>
@@ -88,10 +87,10 @@ var builder = WebApplication.CreateBuilder(args);
     options.TokenValidationParameters = new TokenValidationParameters()
     {
         ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
         ValidateIssuer = false,
         ValidateAudience = false,
-        IssuerSigningKey = new SymmetricSecurityKey(key),
-        ClockSkew = TimeSpan.Zero,
+        //ClockSkew = TimeSpan.Zero,
         //ValidAudience = configuration["JWT:ValidAudience"],
         //ValidIssuer = configuration["JWT:ValidIssuer"]
     };
@@ -99,7 +98,7 @@ var builder = WebApplication.CreateBuilder(args);
     {
         OnMessageReceived = context =>
         {
-            context.Token = context.Request.Cookies["accessToken"];
+            context.Token = context.Request.Cookies["token"];
             return Task.CompletedTask;
         }
     };
@@ -145,12 +144,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-app.UseCors(x => x
-       .AllowAnyOrigin()
-       .AllowAnyMethod()
-       .AllowAnyHeader()
-       );
-
+//app.UseCors(x => x
+//       .AllowAnyOrigin()
+//       .AllowAnyMethod()
+//       .AllowAnyHeader()
+//       );
+app.UseCors("CorsPolicy");
 app.UseRouting();
 app.UseHttpsRedirection();
 app.UseAuthentication();

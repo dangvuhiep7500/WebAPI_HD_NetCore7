@@ -34,7 +34,6 @@ namespace WebAPI_HD.Repository
         {
             var authSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["JWTSettings:SecretKey"]!));
             _ = int.TryParse(Configuration["JWTSettings:TokenValidityInMinutes"], out int tokenValidityInMinutes);
-
             var tokenDescriptor = new JwtSecurityToken
             (
                 //issuer: Configuration["JWT:ValidIssuer"],
@@ -43,16 +42,22 @@ namespace WebAPI_HD.Repository
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
             );
-            //var cookieOptions = new CookieOptions
-            //{
-            //    HttpOnly = true,
-            //    SameSite = SameSiteMode.Strict,
-            //    Secure = true,
-            //    Expires = DateTime.Now.AddDays(7),
-            //    MaxAge = TimeSpan.FromDays(7)
-            //};
             return tokenDescriptor;
         }
+        //public JwtSecurityToken GenerateAccessToken(List<Claim> authClaims)
+        //{
+        //    var authSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["JWTSettings:SecretKey"]!));
+        //    _ = int.TryParse(Configuration["JWTSettings:TokenValidityInMinutes"], out int tokenValidityInMinutes);
+        //    var tokenHandler = new JwtSecurityTokenHandler();
+        //    var tokenDescriptor = new SecurityTokenDescriptor
+        //    {
+        //        Subject = new ClaimsIdentity(authClaims, "Credentials"),
+        //        Expires = DateTime.Now.AddMinutes(tokenValidityInMinutes),
+        //        SigningCredentials = new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
+        //    };
+        //    var token = tokenHandler.CreateToken(tokenDescriptor);
+        //    return (JwtSecurityToken)token;
+        //}
         public string GenerateRefreshToken()
         {
             var randomNumber = new byte[64];
@@ -79,19 +84,5 @@ namespace WebAPI_HD.Repository
             return principal;
 
         }
-        //public string GenerateToken(IdentityUser user)
-        //{
-        //    // generate token that is valid for 7 days
-        //    var tokenHandler = new JwtSecurityTokenHandler();
-        //    var key = Encoding.ASCII.GetBytes(Configuration["JWTSettings:SecretKey"]!);
-        //    var tokenDescriptor = new SecurityTokenDescriptor
-        //    {
-        //        Subject = new ClaimsIdentity(new[] { new Claim("UserName", user.UserName!)}),
-        //        Expires = DateTime.UtcNow.AddHours(3),
-        //        SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-        //    };
-        //    var token = tokenHandler.CreateToken(tokenDescriptor);
-        //    return tokenHandler.WriteToken(token);
-        //}
     }
 }
