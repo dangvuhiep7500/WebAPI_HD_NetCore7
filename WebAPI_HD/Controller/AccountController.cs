@@ -62,7 +62,7 @@ namespace WebAPI_HD.Controller
                 var refreshToken = _jwtAuth.GenerateRefreshToken();
                 _ = int.TryParse(_configuration["JWTSettings:RefreshTokenValidityInDays"], out int refreshTokenValidityInDays);
                 user.RefreshToken = refreshToken;
-                user.RefreshTokenExpiryTime = DateTime.Now.AddDays(refreshTokenValidityInDays);
+                user.RefreshTokenExpiryTime = DateTime.Now.AddSeconds(20);
                 await _userManager.UpdateAsync(user);
                 var Token = new JwtSecurityTokenHandler().WriteToken(token);
 
