@@ -62,7 +62,7 @@ namespace WebAPI_HD.Controller
                 var refreshToken = _jwtAuth.GenerateRefreshToken();
                 _ = int.TryParse(_configuration["JWTSettings:RefreshTokenValidityInDays"], out int refreshTokenValidityInDays);
                 user.RefreshToken = refreshToken;
-                user.RefreshTokenExpiryTime = DateTime.Now.AddSeconds(20);
+                user.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
                 await _userManager.UpdateAsync(user);
                 var Token = new JwtSecurityTokenHandler().WriteToken(token);
 
@@ -71,7 +71,7 @@ namespace WebAPI_HD.Controller
                     Expires = DateTime.Now.AddDays(7),
                     HttpOnly = true,
                     Secure = true,
-                    IsEssential= true,
+                    IsEssential = true,
                     SameSite = SameSiteMode.None,
                     MaxAge = TimeSpan.FromDays(7)
                 };
@@ -191,52 +191,6 @@ namespace WebAPI_HD.Controller
             }
             return Ok(new Response { Status = "Success", Message = "User created successfully!" });
         }
-//        [HttpPost]
-//        [Route("refresh-token")]
-//        public async Task<IActionResult> RefreshToken(TokenModel tokenModel)
-//        {
-//            if (tokenModel is null)
-//            {
-//                return BadRequest("Invalid client request");
-//            }
-//            string? accessToken = tokenModel.AccessToken;
-//            string? refreshToken = tokenModel.RefreshToken;
-
-//            var principal = _jwtAuth.GetPrincipalFromExpiredToken(accessToken);
-//            if (principal == null)
-//            {
-//                return BadRequest("Invalid access token");
-//            }
-//#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
-//#pragma warning disable CS8602 // Dereference of a possibly null reference.
-//            string username = principal.Identity.Name;
-//#pragma warning restore CS8602 // Dereference of a possibly null reference.
-//#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
-//            var user = await _userManager.FindByIdAsync(username!);
-//            if (user == null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
-//            {
-//                return BadRequest("Invalid access token or refresh token");
-//            }
-//            var newAccessToken = _jwtAuth.GenerateAccessToken(principal.Claims.ToList());
-//            var newRefreshToken = _jwtAuth.GenerateRefreshToken();
-
-//            user.RefreshToken = newRefreshToken;
-//            await _userManager.UpdateAsync(user);
-//            //HttpContext.Response.Cookies.Append("refreshToken", newRefreshToken,
-//            //    new CookieOptions
-//            //    {
-//            //        Expires = DateTime.Now.AddDays(7),
-//            //        HttpOnly = true,
-//            //        Secure = true,
-//            //        IsEssential = true,
-//            //        SameSite = SameSiteMode.None
-//            //    });
-//            return new ObjectResult(new
-//            {
-//                accessToken = new JwtSecurityTokenHandler().WriteToken(newAccessToken),
-//                refreshToken = newRefreshToken,
-//            });
-//        } 
         [HttpPost]
         [Route("refresh-token")]
         public async Task<IActionResult> RefreshToken(TokenModel tokenModel)
@@ -261,10 +215,10 @@ namespace WebAPI_HD.Controller
             var user = await _userManager.FindByIdAsync(username!);
             if (!user!.RefreshToken!.Equals(refreshToken) || user == null)
             {
-                return Unauthorized("Invaild RefreshToken");
+                return Unauthorized(new Response { Status = "Error", Message = "Invaild RefreshToken" });
             }else if (user.RefreshTokenExpiryTime <= DateTime.Now)
             {
-                return Unauthorized("Token expired");
+                return Unauthorized(new Response { Status = "Error", Message = "Token expired" });
             }
             var newAccessToken = _jwtAuth.GenerateAccessToken(principal.Claims.ToList());
             var newRefreshToken = _jwtAuth.GenerateRefreshToken();

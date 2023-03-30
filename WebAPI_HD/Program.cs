@@ -67,21 +67,13 @@ var builder = WebApplication.CreateBuilder(args);
         options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
         options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
     })
-.AddCookie(options =>
+    .AddCookie(options =>
     {
-        //options.Cookie.HttpOnly = true;
-        //options.Cookie.SameSite = SameSiteMode.Strict;
-        //options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-        //options.Events.OnRedirectToLogin = context =>
-        //{
-        //    context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-        //    return Task.CompletedTask;
-        //};
         options.Cookie.Name = "token";
     })
 // Adding Jwt Bearer
-.AddJwtBearer(options =>
-{
+    .AddJwtBearer(options =>
+    {
     options.SaveToken = true;
     options.RequireHttpsMetadata = false;
     options.TokenValidationParameters = new TokenValidationParameters()
@@ -90,7 +82,7 @@ var builder = WebApplication.CreateBuilder(args);
         IssuerSigningKey = new SymmetricSecurityKey(key),
         ValidateIssuer = false,
         ValidateAudience = false,
-        //ClockSkew = TimeSpan.Zero,
+        ClockSkew = TimeSpan.Zero,
         //ValidAudience = configuration["JWT:ValidAudience"],
         //ValidIssuer = configuration["JWT:ValidIssuer"]
     };
@@ -105,7 +97,6 @@ var builder = WebApplication.CreateBuilder(args);
 });
     builder.Services.AddSwaggerGen(setup =>
     {
-        // Include 'SecurityScheme' to use JWT Authentication
         var jwtSecurityScheme = new OpenApiSecurityScheme
         {
             BearerFormat = "JWT",
@@ -144,11 +135,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-//app.UseCors(x => x
-//       .AllowAnyOrigin()
-//       .AllowAnyMethod()
-//       .AllowAnyHeader()
-//       );
 app.UseCors("CorsPolicy");
 app.UseRouting();
 app.UseHttpsRedirection();
