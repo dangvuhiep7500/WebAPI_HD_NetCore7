@@ -50,6 +50,8 @@ namespace WebAPI_HD.Controller
                 var authClaims = new List<Claim>
                 {
                     new Claim(ClaimTypes.Name, user.Id!),
+                    new Claim(ClaimTypes.NameIdentifier, user.LastName! + " " + user.FirstName! ),
+                    new Claim(ClaimTypes.Email, user.Email!),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 };
 
@@ -62,7 +64,7 @@ namespace WebAPI_HD.Controller
                 var refreshToken = _jwtAuth.GenerateRefreshToken();
                 _ = int.TryParse(_configuration["JWTSettings:RefreshTokenValidityInDays"], out int refreshTokenValidityInDays);
                 user.RefreshToken = refreshToken;
-                user.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
+                user.RefreshTokenExpiryTime = DateTime.Now.AddDays(refreshTokenValidityInDays);
                 await _userManager.UpdateAsync(user);
                 var Token = new JwtSecurityTokenHandler().WriteToken(token);
 
@@ -125,6 +127,22 @@ namespace WebAPI_HD.Controller
                 return NotFound();
             }
             return Ok(user);
+        }
+        [HttpGet("currentuser")]
+        public IActionResult GetCurrentUser()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.Name);
+            var userName = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userEmail = User.FindFirstValue(ClaimTypes.Email);
+
+            // Do something with the user information
+
+            return Ok(new
+            {
+                userId = userId,
+                userName = userName,
+                userEmail = userEmail
+            });
         }
         //[Authorize(Roles = UserRoles.SuperAdmin)]
         [HttpPost("register-admin")]
@@ -204,7 +222,7 @@ namespace WebAPI_HD.Controller
 
             var principal = _jwtAuth.GetPrincipalFromExpiredToken(accessToken);
             if (principal == null)
-            {
+            { 
                 return BadRequest("Invalid access token");
             }
 #pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
