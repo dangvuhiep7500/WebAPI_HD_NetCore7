@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebAPI_HD.Model;
@@ -15,6 +16,7 @@ namespace WebAPI_HD.Controller
         {
             _context = context;
         }
+        [Authorize]
         [HttpGet("GetCustomer")]
         public async Task<ActionResult<IEnumerable<Customer>>> GetCustomers()
         {

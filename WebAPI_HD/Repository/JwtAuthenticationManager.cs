@@ -38,7 +38,7 @@ namespace WebAPI_HD.Repository
             (
                 //issuer: Configuration["JWT:ValidIssuer"],
                 //audience: Configuration["JWT:ValidAudience"],
-                expires: DateTime.Now.AddSeconds(10),
+                expires: DateTime.Now.AddSeconds(5),
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
             );

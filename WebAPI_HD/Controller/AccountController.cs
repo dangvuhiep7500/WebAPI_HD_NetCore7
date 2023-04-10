@@ -128,6 +128,7 @@ namespace WebAPI_HD.Controller
             }
             return Ok(user);
         }
+        //[Authorize]
         [HttpGet("currentuser")]
         public IActionResult GetCurrentUser()
         {
