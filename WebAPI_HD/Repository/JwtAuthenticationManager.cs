@@ -36,28 +36,15 @@ namespace WebAPI_HD.Repository
             _ = int.TryParse(Configuration["JWTSettings:TokenValidityInMinutes"], out int tokenValidityInMinutes);
             var tokenDescriptor = new JwtSecurityToken
             (
-                //issuer: Configuration["JWT:ValidIssuer"],
-                //audience: Configuration["JWT:ValidAudience"],
+                issuer: Configuration["JWT:ValidIssuer"],
+                audience: Configuration["JWT:ValidAudience"],
                 expires: DateTime.Now.AddSeconds(5),
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
             );
             return tokenDescriptor;
         }
-        //public JwtSecurityToken GenerateAccessToken(List<Claim> authClaims)
-        //{
-        //    var authSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["JWTSettings:SecretKey"]!));
-        //    _ = int.TryParse(Configuration["JWTSettings:TokenValidityInMinutes"], out int tokenValidityInMinutes);
-        //    var tokenHandler = new JwtSecurityTokenHandler();
-        //    var tokenDescriptor = new SecurityTokenDescriptor
-        //    {
-        //        Subject = new ClaimsIdentity(authClaims, "Credentials"),
-        //        Expires = DateTime.Now.AddMinutes(tokenValidityInMinutes),
-        //        SigningCredentials = new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
-        //    };
-        //    var token = tokenHandler.CreateToken(tokenDescriptor);
-        //    return (JwtSecurityToken)token;
-        //}
+  
         public string GenerateRefreshToken()
         {
             var randomNumber = new byte[64];
@@ -82,7 +69,20 @@ namespace WebAPI_HD.Repository
                 throw new SecurityTokenException("Invalid token");
 
             return principal;
-
         }
+        //public JwtSecurityToken GenerateAccessToken(List<Claim> authClaims)
+        //{
+        //    var authSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["JWTSettings:SecretKey"]!));
+        //    _ = int.TryParse(Configuration["JWTSettings:TokenValidityInMinutes"], out int tokenValidityInMinutes);
+        //    var tokenHandler = new JwtSecurityTokenHandler();
+        //    var tokenDescriptor = new SecurityTokenDescriptor
+        //    {
+        //        Subject = new ClaimsIdentity(authClaims, "Credentials"),
+        //        Expires = DateTime.Now.AddMinutes(tokenValidityInMinutes),
+        //        SigningCredentials = new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
+        //    };
+        //    var token = tokenHandler.CreateToken(tokenDescriptor);
+        //    return (JwtSecurityToken)token;
+        //}
     }
 }

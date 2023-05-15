@@ -24,7 +24,7 @@
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/swagger",
       "publishAllPorts": true,
       "useSSL": true,
-        "sslPort": 5000
+      "sslPort": 5000
     }
   },
   "$schema": "https://json.schemastore.org/launchsettings.json",

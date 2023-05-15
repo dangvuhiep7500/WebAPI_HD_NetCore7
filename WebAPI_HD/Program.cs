@@ -71,6 +71,11 @@ var builder = WebApplication.CreateBuilder(args);
     {
         options.Cookie.Name = "token";
     })
+    .AddGoogle(googleOptions =>
+    {
+        googleOptions.ClientId = configuration["Authentication:Google:ClientId"];
+        googleOptions.ClientSecret = configuration["Authentication:Google:ClientSecret"];
+    })
 // Adding Jwt Bearer
     .AddJwtBearer(options =>
     {
